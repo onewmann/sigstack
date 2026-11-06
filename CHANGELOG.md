@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- GitHub Actions CI on Ubuntu and Windows: lint, type check, tests; JUnit report uploaded on failure. CI badge in the README.
 - Code quality tooling: ruff (lint + format) and mypy (strict) configured in `pyproject.toml`, pre-commit hooks, `.clang-format`, CONTRIBUTING section on local checks.
 - pixi environment (`pixi.toml`, `pixi.lock`) for linux-64 and win-64 with tasks `test`, `lint`, `fmt`, `typecheck`, `check`.
 - Repository skeleton: license, README, changelog, `pyproject.toml` (hatchling), package `sigstack` with `core` subpackage, import test.
