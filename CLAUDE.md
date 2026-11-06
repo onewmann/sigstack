@@ -4,7 +4,7 @@ Instructions for Claude Code in this repository.
 
 ## Project
 
-**sigstack**: C++/Python toolkit for signal processing with a uniform block-processing model (offline and streaming), plus a simulation-based design loop (Monte Carlo, optimisation). Architecture and process: `docs/ROADMAP.md`. Backlog and schedule: `docs/plan/` (`backlog.toml`, `plan.toml`, generated `PLAN.md`). Planning process: `docs/plan/PLANNING.md`. Current sprint: highest-numbered file in `docs/sprints/`.
+**sigstack**: C++/Python toolkit for signal processing with a uniform block-processing model (offline and streaming), plus a simulation-based design loop (Monte Carlo, optimisation). Architecture and process: `docs/ROADMAP.md`. Backlog and schedule: `docs/plan/` (`backlog.toml`, `plan.toml`, generated `PLAN.md`). Planning process: `docs/plan/PLANNING.md`. Current sprint: highest-numbered file in `docs/sprints/` whose title is not marked `(draft)`.
 
 ## Ground rules
 

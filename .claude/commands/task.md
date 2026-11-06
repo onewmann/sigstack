@@ -3,7 +3,7 @@ description: Implement a task from the current sprint file
 argument-hint: <task-id, e.g. T6>
 ---
 
-Implement task **$ARGUMENTS** from the current sprint file in `docs/sprints/` (highest sprint number).
+Implement task **$ARGUMENTS** from the current sprint file in `docs/sprints/` (highest sprint number whose title is not marked `(draft)`).
 
 1. Read `CLAUDE.md`, the task section for $ARGUMENTS in the sprint file, and the ROADMAP sections it references.
 2. Restate in a few lines: scope, files you will create or change, the "Done when" list, and anything unclear. If something is unclear or needs a new dependency, ask before coding.
