@@ -42,6 +42,9 @@ jobs:
       - name: Test
         run: pixi run test --junitxml=junit.xml
 
+      - name: Plan check
+        run: pixi run plan-check
+
       - name: Upload test report
         if: failure()
         uses: actions/upload-artifact@v7

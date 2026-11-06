@@ -4,7 +4,7 @@ Instructions for Claude Code in this repository.
 
 ## Project
 
-**sigstack**: C++/Python toolkit for signal processing with a uniform block-processing model (offline and streaming), plus a simulation-based design loop (Monte Carlo, optimisation). Full plan: `docs/ROADMAP.md`. Current sprint: `docs/sprints/sprint-01.md`.
+**sigstack**: C++/Python toolkit for signal processing with a uniform block-processing model (offline and streaming), plus a simulation-based design loop (Monte Carlo, optimisation). Architecture and process: `docs/ROADMAP.md`. Backlog and schedule: `docs/plan/` (`backlog.toml`, `plan.toml`, generated `PLAN.md`). Planning process: `docs/plan/PLANNING.md`. Current sprint: highest-numbered file in `docs/sprints/`.
 
 ## Ground rules
 
@@ -18,8 +18,9 @@ Instructions for Claude Code in this repository.
 ```
 python/sigstack/   Python package (src-style layout)
 tests/             pytest tests, mirror the package structure
-cpp/               C++ core (from Sprint 6 on, empty until then)
-docs/              ROADMAP.md, sprints/, later MkDocs
+cpp/               C++ core (from S0.3/S6.1 on, empty until then)
+docs/              ROADMAP.md, plan/, sprints/, later MkDocs
+scripts/           plan.py (backlog check and schedule), sync_issues.py (GitHub issues)
 ```
 
 ## Commands
@@ -33,7 +34,10 @@ All tooling runs through pixi.
 | `pixi run lint` | ruff check + ruff format --check |
 | `pixi run fmt` | ruff check --fix, then ruff format |
 | `pixi run typecheck` | mypy |
-| `pixi run check` | lint + typecheck + test (run before every commit) |
+| `pixi run plan` | validate backlog, regenerate `docs/plan/PLAN.md` and `BACKLOG.md` |
+| `pixi run check` | lint + typecheck + test + `plan.py --check` (run before every commit) |
+
+Before T2 exists: `python3 scripts/plan.py` works with the system Python (≥ 3.11, standard library only).
 
 ## Code conventions
 
@@ -59,6 +63,17 @@ All tooling runs through pixi.
 4. Run `pixi run check`. A task is not done while it fails.
 5. Add an entry under `## [Unreleased]` in `CHANGELOG.md`.
 6. Summarise: what changed, how it was verified, open points. Do not tick tasks that are not verified.
+
+## Planning rules
+
+- Never edit `docs/plan/PLAN.md`, `BACKLOG.md` or `history.csv` by hand; they are generated.
+- Story status changes only through `/sprint-review`, `/plan-sprint`, `/replan`, `/refine`, and only after Oli confirms.
+- If a task reveals that a story is wrong (scope, estimate, missing dependency), say so in the summary and propose the backlog change; do not silently change scope.
+- Plan changes are separate commits: `docs(plan): ...`.
+
+## Custom commands
+
+`/task <id>`, `/review <id>`, `/refine`, `/plan-sprint <n>`, `/sprint-review <n>`, `/replan <reason>`, `/release <version>`.
 
 ## Writing style for docs and README
 

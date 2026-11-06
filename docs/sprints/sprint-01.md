@@ -14,8 +14,8 @@
 | T5 | GitHub hygiene: templates, CONTRIBUTING, branch protection | S0.2 | Claude Code + Oli | 0.5 h | [ ] |
 | T6 | `Block` protocol and `Gain` block | S1.1 | Claude Code | 2 h | [ ] |
 | T7 | Window functions | S1.3 | Claude Code | 1.5 h | [ ] |
-| T8 | Backlog on GitHub (labels, milestones, issues, board) | infra | Oli (script) | 1 h | [ ] |
-| T9 | Review, retro, tag `v0.0.1` | — | Oli | 0.5 h | [ ] |
+| T8 | Backlog on GitHub (labels, milestones, issues, board) | infra | Oli (`sync_issues.py`) | 1 h | [ ] |
+| T9 | `/sprint-review 1`, retro, tag `v0.0.1`, `/plan-sprint 2` | — | Oli + Claude Code | 0.5 h | [ ] |
 
 Order: T0 → T1 → T2 → T3 → T4 → T5 → T8 (any time after T1), then T6 and T7 (independent of each other).
 
@@ -96,7 +96,9 @@ Requirements:
 - platforms: linux-64, win-64 (osx-arm64 optional, only if it costs nothing)
 - dependencies: python 3.12, numpy, scipy, pytest, hypothesis, ruff, mypy, pre-commit
 - the package itself installed editable via [pypi-dependencies]
-- tasks: test, lint, fmt, typecheck, check (= lint + typecheck + test, via depends-on)
+- tasks: test, lint, fmt, typecheck, plan (`python scripts/plan.py`),
+  plan-check (`python scripts/plan.py --check`),
+  check (= lint + typecheck + test + plan-check, via depends-on)
 - commit pixi.lock
 - README: Install section with `pixi install` and `pixi run check`
 
@@ -256,18 +258,22 @@ Branch: feat/T7-windows.
 ## T8 — Backlog on GitHub (manual, scripted)
 
 ```bash
-bash scripts/create_backlog.sh          # labels, milestones, issues for Sprint 1 and 2
+python3 scripts/plan.py                         # check backlog, regenerate docs/plan/PLAN.md
+python3 scripts/sync_issues.py --sprint 1       # dry run: shows labels, milestone, issues
+python3 scripts/sync_issues.py --sprint 1 --apply
+python3 scripts/sync_issues.py --sprint 2 --apply   # optional, Sprint 2 draft
 ```
 
 Then in the browser: create a Project (board) "sigstack", add fields *Points* (number), *Epic* (single select), *Sprint* (iteration, 2 weeks, start 09.11.2026), add all issues.
 
 ---
 
-## T9 — Review and retro
+## T9 — Review, retro, next sprint
 
 - Run `pixi run check` on Fedora and Windows from a fresh clone.
 - Update CHANGELOG, tag `v0.0.1`, push the tag.
-- Retro (in this file, below): one thing to keep, one thing to change, measured points.
+- In Claude Code: `/sprint-review 1` (records measured points in `plan.toml`, updates the forecast), then `/plan-sprint 2` (turns the draft `sprint-02.md` into the committed plan).
+- Mirror the plan to the vault (see `docs/plan/PLANNING.md`).
 
 ### Review notes
 
@@ -278,3 +284,9 @@ Then in the browser: create a Project (board) "sigstack", add fields *Points* (n
 
 - Keep:
 - Change:
+
+### Log
+
+| Date | Task | Time | Note |
+|---|---|---|---|
+| | | | |

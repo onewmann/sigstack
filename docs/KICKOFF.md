@@ -12,7 +12,10 @@ Copy the content of this folder into the root of the new repository (task T0 in 
 | `.claude/commands/task.md` | `/task T6` runs a task from the sprint file |
 | `.claude/commands/review.md` | `/review T6` checks the branch against the Definition of Done |
 | `.claude/settings.json` | Allows pixi/git/gh read commands, blocks force-push and git config changes |
-| `scripts/create_backlog.sh` | Creates labels, milestones and the Sprint 1+2 issues via `gh` |
+| `docs/plan/` | Backlog (`backlog.toml`), calendar and velocity (`plan.toml`), generated `PLAN.md` and `BACKLOG.md`, planning process, decision log |
+| `scripts/plan.py` | Validates the backlog, schedules it into sprints, writes the plan |
+| `scripts/sync_issues.py` | Creates labels, milestones and issues from the backlog via `gh` (idempotent) |
+| `.claude/commands/{refine,plan-sprint,sprint-review,replan,release}.md` | Planning rhythm, see `docs/plan/PLANNING.md` |
 
 ## Working with Claude Code
 
@@ -28,4 +31,4 @@ Copy the content of this folder into the root of the new repository (task T0 in 
 - hatchling as a temporary build backend; scikit-build-core follows with the C++ part (S0.3)
 - Sprint 1 starts Monday, 09.11.2026
 
-Sprint 2 is currently planned at 11 points, above the assumed velocity of 8. After Sprint 1, move S0.3 to Sprint 3 if the measured velocity is about 8.
+Sprint 2 is planned at 8 points, matching the assumed velocity of 8: S0.3 (scikit-build-core) moved to the C++ work package (D-008 in `docs/plan/DECISIONS.md`, still to be confirmed).

@@ -1,0 +1,1132 @@
+# sigstack product backlog — single source of truth for stories.
+#
+# Edit this file, then run `python scripts/plan.py` (or `pixi run plan`) to validate it and
+# regenerate docs/plan/PLAN.md and docs/plan/BACKLOG.md. Never edit the generated files.
+#
+# Story fields
+#   id       "S<epic>.<n>", unique, never reused
+#   epic     "E<n>", must exist in [[epic]]
+#   group    work package; profiles in plan.toml map groups to releases
+#   title    short name
+#   story    user story ("As a ... I want ... so that ...")
+#   ac       acceptance criteria, one per entry
+#   points   1, 2, 3, 5 (8 means: split before it enters a sprint)
+#   deps     story ids that must be done first (same or earlier sprint)
+#   status   "todo" | "committed" (in a planned sprint) | "done" | "dropped"
+#   sprint   sprint number, required for committed and done
+# Order inside a group is the priority order.
+
+# ---------------------------------------------------------------- epics
+[[epic]]
+id = "E0"
+title = "Project infrastructure"
+[[epic]]
+id = "E1"
+title = "Core and block model"
+[[epic]]
+id = "E2"
+title = "Signal generators and metrics"
+[[epic]]
+id = "E3"
+title = "Filters"
+[[epic]]
+id = "E4"
+title = "Spectral analysis"
+[[epic]]
+id = "E5"
+title = "Pipeline, config, CLI"
+[[epic]]
+id = "E6"
+title = "C++ core and bindings"
+[[epic]]
+id = "E7"
+title = "Multirate and filter banks"
+[[epic]]
+id = "E8"
+title = "Wavelets"
+[[epic]]
+id = "E9"
+title = "Adaptive filters"
+[[epic]]
+id = "E10"
+title = "Features and detection"
+[[epic]]
+id = "E11"
+title = "Benchmarking and cost model"
+[[epic]]
+id = "E12"
+title = "Domain examples, docs, v1.0"
+[[epic]]
+id = "E13"
+title = "RF / communications"
+[[epic]]
+id = "E14"
+title = "Radar"
+[[epic]]
+id = "E15"
+title = "Antenna arrays and beamforming"
+[[epic]]
+id = "E16"
+title = "Simulation and Monte Carlo"
+[[epic]]
+id = "E17"
+title = "Optimisation"
+[[epic]]
+id = "E18"
+title = "Surrogates and learned components"
+[[epic]]
+id = "E19"
+title = "Embedded port (Cortex-M)"
+
+# ========================================== groups: foundation, signals-docs
+[[story]]
+id = "S0.1"
+epic = "E0"
+group = "foundation"
+title = "pixi environment"
+story = "As a developer I want a pixi environment so that the setup runs with one command on Fedora and Windows."
+ac = ["`pixi install && pixi run check` works on Fedora and Windows"]
+points = 2
+deps = []
+status = "committed"
+sprint = 1
+
+[[story]]
+id = "S0.2"
+epic = "E0"
+group = "foundation"
+title = "CI on every push and PR"
+story = "As a developer I want CI on every push so that broken code never reaches main."
+ac = ["Lint, typecheck and tests run on Ubuntu and Windows", "Required status check for merging into main"]
+points = 2
+deps = ["S0.1"]
+status = "committed"
+sprint = 1
+
+[[story]]
+id = "S0.5"
+epic = "E0"
+group = "foundation"
+title = "pre-commit hooks"
+story = "As a developer I want pre-commit hooks so that style is consistent."
+ac = ["ruff, ruff-format, mypy active", "`pre-commit run --all-files` passes"]
+points = 1
+deps = ["S0.1"]
+status = "committed"
+sprint = 1
+
+[[story]]
+id = "S1.1"
+epic = "E1"
+group = "foundation"
+title = "Block interface"
+story = "As a user I want a common Block interface so that all steps are interchangeable."
+ac = ["Protocol defined and documented, contract includes chunk invariance", "Used by a Gain block with tests"]
+points = 2
+deps = ["S0.1"]
+status = "committed"
+sprint = 1
+
+[[story]]
+id = "S1.3"
+epic = "E1"
+group = "foundation"
+title = "Window functions"
+story = "As a user I want standard windows (Hann, Hamming, Blackman, Blackman-Harris, Kaiser, flat-top)."
+ac = ["Match scipy.signal.get_window to 1e-12", "Coherent gain and ENBW helpers"]
+points = 1
+deps = ["S0.1"]
+status = "committed"
+sprint = 1
+
+[[story]]
+id = "S1.4"
+epic = "E1"
+group = "foundation"
+title = "Complex and multichannel block contract"
+story = "As a developer I want complex dtypes and multichannel arrays (channels x samples) in the block contract from the start, so that RF, radar and array processing need no refactor later."
+ac = ["Gain passes tests for real, complex, 1-channel and N-channel input", "Dtype promotion rules documented"]
+points = 2
+deps = ["S1.1"]
+status = "todo"
+
+[[story]]
+id = "S1.2"
+epic = "E1"
+group = "foundation"
+title = "Generic chunking test"
+story = "As a developer I want an automatic chunking test so that every stateful block is stream-safe."
+ac = ["Hypothesis-based test runs for every registered block", "Random chunk sizes including 0 and 1", "Real, complex and multichannel input", "A stateful Delay block exists so the property is exercised; a broken test block makes it fail"]
+points = 3
+deps = ["S1.4", "S1.5"]
+status = "todo"
+
+[[story]]
+id = "S1.5"
+epic = "E1"
+group = "foundation"
+title = "Block registry and parameter metadata"
+story = "As a developer I want every block to declare its name and typed parameters, so that tests, YAML configs and optimisers can discover and construct blocks."
+ac = ["Registry lists all blocks", "Each block exposes params() and from_params() that round-trip", "Parameter ranges/choices can be declared"]
+points = 2
+deps = ["S1.1"]
+status = "todo"
+
+[[story]]
+id = "S0.4"
+epic = "E0"
+group = "signals-docs"
+title = "Documentation site"
+story = "As a reader I want a docs site so that I can learn the API."
+ac = ["MkDocs Material with MathJax and mkdocstrings", "Auto-deploy to GitHub Pages from main", "API pages for core"]
+points = 2
+deps = ["S0.2"]
+status = "todo"
+notes = "Moved forward from Sprint 5 so the Definition of Done item 'appears in the docs' holds from v0.1."
+
+[[story]]
+id = "S2.1"
+epic = "E2"
+group = "signals-docs"
+title = "Seeded test signals with ground truth"
+story = "As a tester I want seeded test signals (multitone, chirp, noise, impulse, AM/FM) with known ground truth."
+ac = ["Generators return signal and metadata (frequencies, amplitudes, band energies)", "Same seed gives identical output", "Complex variants where meaningful"]
+points = 3
+deps = ["S1.4"]
+status = "todo"
+
+[[story]]
+id = "S2.2"
+epic = "E2"
+group = "signals-docs"
+title = "Metrics"
+story = "As a user I want SNR, frequency response, ripple, attenuation and group delay metrics."
+ac = ["Validated on textbook filters with known values"]
+points = 3
+deps = ["S2.1"]
+status = "todo"
+
+[[story]]
+id = "S2.3"
+epic = "E2"
+group = "signals-docs"
+title = "Standard plots"
+story = "As a user I want standard plots (magnitude/phase, spectrogram, band energies)."
+ac = ["One function per plot, consistent style", "Figures reproducible from a script"]
+points = 2
+deps = ["S2.2"]
+status = "todo"
+
+[[story]]
+id = "S0.7"
+epic = "E0"
+group = "signals-docs"
+title = "Release automation"
+story = "As a maintainer I want a tag to produce a GitHub release, so that every version is documented without manual steps."
+ac = ["Pushing a tag vX.Y.Z builds sdist and wheel and creates a GitHub release", "Release notes taken from CHANGELOG"]
+points = 2
+deps = ["S0.2"]
+status = "todo"
+
+# ============================================ groups: filters, spectral
+[[story]]
+id = "S3.1"
+epic = "E3"
+group = "filters"
+title = "FIR design"
+story = "As a user I want FIR design by window method, Parks-McClellan and least squares."
+ac = ["Results match SciPy", "Specification checked with metrics"]
+points = 3
+deps = ["S1.3", "S2.2"]
+status = "todo"
+
+[[story]]
+id = "S3.2"
+epic = "E3"
+group = "filters"
+title = "IIR design as SOS"
+story = "As a user I want IIR design (Butterworth, Chebyshev I/II, elliptic) as second-order sections."
+ac = ["Stable, matches SciPy"]
+points = 2
+deps = ["S2.2"]
+status = "todo"
+
+[[story]]
+id = "S3.3"
+epic = "E3"
+group = "filters"
+title = "Streaming FIR and IIR blocks"
+story = "As a user I want streaming FIR and IIR blocks."
+ac = ["Pass the generic chunking test", "Real and complex input"]
+points = 3
+deps = ["S3.1", "S3.2", "S1.2"]
+status = "todo"
+
+[[story]]
+id = "S3.4"
+epic = "E3"
+group = "filters"
+title = "Zero-phase offline filtering"
+story = "As a user I want zero-phase offline filtering."
+ac = ["Same result as filtfilt within tolerance"]
+points = 1
+deps = ["S3.3"]
+status = "todo"
+
+[[story]]
+id = "S4.1"
+epic = "E4"
+group = "spectral"
+title = "STFT / ISTFT"
+story = "As a user I want STFT/ISTFT with a perfect reconstruction check."
+ac = ["COLA check", "Reconstruction error < 1e-10", "Streaming STFT block passes chunking test"]
+points = 3
+deps = ["S1.3", "S1.2"]
+status = "todo"
+
+[[story]]
+id = "S4.2"
+epic = "E4"
+group = "spectral"
+title = "Welch PSD and band energy"
+story = "As a user I want Welch PSD and band energy for arbitrary band edges."
+ac = ["Parseval check on multitone ground truth", "Non-uniform band edges supported"]
+points = 3
+deps = ["S4.1", "S2.1"]
+status = "todo"
+
+[[story]]
+id = "S4.3"
+epic = "E4"
+group = "spectral"
+title = "Cross-spectrum and coherence"
+story = "As a user I want cross-spectrum and coherence."
+ac = ["Matches SciPy"]
+points = 2
+deps = ["S4.2"]
+status = "todo"
+
+[[story]]
+id = "S0.6"
+epic = "E0"
+group = "spectral"
+title = "Devcontainer"
+story = "As a reviewer I want a devcontainer, so that I can run the project without installing anything locally."
+ac = ["Opens in VS Code / Codespaces", "`pixi run check` passes inside"]
+points = 1
+deps = ["S0.1"]
+status = "todo"
+
+# ================================================ groups: pipeline, cpp-core
+[[story]]
+id = "S5.1"
+epic = "E5"
+group = "pipeline"
+title = "Pipeline"
+story = "As a user I want to chain blocks in a Pipeline."
+ac = ["Sample rates and latency propagate correctly", "A pipeline is itself a Block and passes the chunking test"]
+points = 3
+deps = ["S1.5", "S3.3"]
+status = "todo"
+
+[[story]]
+id = "S5.2"
+epic = "E5"
+group = "pipeline"
+title = "YAML pipeline configs"
+story = "As a user I want to define pipelines in YAML."
+ac = ["Round trip config <-> object", "Schema validation with clear errors"]
+points = 3
+deps = ["S5.1"]
+status = "todo"
+notes = "Needs a YAML dependency (ask first, see CLAUDE.md)."
+
+[[story]]
+id = "S5.3"
+epic = "E5"
+group = "pipeline"
+title = "CLI"
+story = "As a user I want a CLI `sigstack run config.yaml`."
+ac = ["Reads input file, writes results and figures"]
+points = 2
+deps = ["S5.2"]
+status = "todo"
+
+[[story]]
+id = "S0.3"
+epic = "E0"
+group = "cpp-core"
+title = "scikit-build-core build"
+story = "As a user I want pip install . to build the package including the C++ part."
+ac = ["Build backend switched from hatchling to scikit-build-core", "Wheel installs in a clean environment on Linux and Windows"]
+points = 3
+deps = ["S0.2"]
+status = "todo"
+notes = "Moved from Sprint 2: not needed before C++ code exists."
+
+[[story]]
+id = "S6.1"
+epic = "E6"
+group = "cpp-core"
+title = "Spike: nanobind with one kernel"
+story = "As a developer I want to know that a C++ kernel builds and binds on both OS before investing in the C++ core."
+ac = ["One FIR kernel callable from Python", "Builds in CI on Linux and Windows", "Written decision note in docs/plan/DECISIONS.md"]
+points = 3
+deps = ["S0.3"]
+status = "todo"
+
+[[story]]
+id = "S6.2"
+epic = "E6"
+group = "cpp-core"
+title = "C++ streaming FIR and SOS IIR"
+story = "As a user I want C++ implementations of the streaming filters."
+ac = ["Equal to the Python reference within stated tolerance", "Faster than the pure NumPy path", "Chunking test passes for the C++ blocks"]
+points = 5
+deps = ["S6.1", "S3.3"]
+status = "todo"
+
+# ====================================================== group: cpp-fastpath
+[[story]]
+id = "S6.3"
+epic = "E6"
+group = "cpp-fastpath"
+title = "C++ STFT on pocketfft, optional FFTW"
+story = "As a user I want a fast STFT."
+ac = ["Equal results with pocketfft and FFTW backends", "FFTW off by default (license)"]
+points = 5
+deps = ["S6.1", "S4.1"]
+status = "todo"
+
+[[story]]
+id = "S6.4"
+epic = "E6"
+group = "cpp-fastpath"
+title = "C++ library usable without Python"
+story = "As a C++ developer I want to use the core without Python."
+ac = ["CMake target with install rules", "Minimal C++ example built in CI"]
+points = 2
+deps = ["S6.2"]
+status = "todo"
+
+[[story]]
+id = "S11.1"
+epic = "E11"
+group = "cpp-fastpath"
+title = "Benchmark harness"
+story = "As a developer I want reproducible timing benchmarks."
+ac = ["Results as JSON with machine info and commit hash", "Run locally via `pixi run bench`, not in CI timing"]
+points = 3
+deps = ["S6.2"]
+status = "todo"
+
+[[story]]
+id = "S11.2"
+epic = "E11"
+group = "cpp-fastpath"
+title = "Benchmark report"
+story = "As a reader I want benchmark plots against SciPy/NumPy."
+ac = ["Plots and table generated from stored JSON", "Hardware stated in the docs"]
+points = 2
+deps = ["S11.1"]
+status = "todo"
+
+# ================================================= group: detection-basic
+[[story]]
+id = "S10.1"
+epic = "E10"
+group = "detection-basic"
+title = "Threshold detectors and 1D CA-CFAR"
+story = "As a user I want basic detectors (fixed threshold with hysteresis, 1D CA-CFAR) as blocks."
+ac = ["CA-CFAR threshold factor from the analytic Pfa formula", "Streaming block passes chunking test"]
+points = 3
+deps = ["S1.2", "S2.1"]
+status = "todo"
+notes = "Split out of E10 because S16.4 needs it earlier than the rest of E10."
+
+# ================================================================ group: mc
+[[story]]
+id = "S16.1"
+epic = "E16"
+group = "mc"
+title = "Scenario definition"
+story = "As a user I want to define a scenario in YAML (signal model, impairments, parameter distributions)."
+ac = ["Scenario object validated", "Reproducible from seed"]
+points = 3
+deps = ["S5.2", "S2.1"]
+status = "todo"
+
+[[story]]
+id = "S16.2"
+epic = "E16"
+group = "mc"
+title = "Monte Carlo runner"
+story = "As a user I want a Monte Carlo runner that executes a pipeline over N realisations in parallel."
+ac = ["Same seed gives identical results with 1 and 8 workers", "Results stored as Parquet, runs can be resumed"]
+points = 5
+deps = ["S16.1", "S5.1"]
+status = "todo"
+
+[[story]]
+id = "S16.3"
+epic = "E16"
+group = "mc"
+title = "Estimators with confidence intervals"
+story = "As a user I want estimators with confidence intervals (mean, quantiles, Wilson interval for probabilities)."
+ac = ["Coverage of the 95 % interval checked on a known distribution"]
+points = 2
+deps = ["S16.2"]
+status = "todo"
+
+[[story]]
+id = "S16.4"
+epic = "E16"
+group = "mc"
+title = "ROC and Pd-SNR curves"
+story = "As a user I want ROC and Pd-SNR curves from Monte Carlo results."
+ac = ["1D CA-CFAR on Gaussian noise matches the analytic Pfa within the CI"]
+points = 3
+deps = ["S16.3", "S10.1"]
+status = "todo"
+
+[[story]]
+id = "S16.5"
+epic = "E16"
+group = "mc"
+title = "Space-filling sweeps and sensitivity"
+story = "As a user I want Latin hypercube / Sobol sweeps and Sobol sensitivity indices."
+ac = ["Indices match the Ishigami test function"]
+points = 3
+deps = ["S16.2"]
+status = "todo"
+
+[[story]]
+id = "S16.6"
+epic = "E16"
+group = "mc"
+title = "Verified-detector report"
+story = "As a reader I want one report that shows a detector verified by simulation."
+ac = ["Measured vs analytic Pfa and Pd over SNR with CIs", "Generated by one command"]
+points = 2
+deps = ["S16.4"]
+status = "todo"
+
+# ========================================================== group: multirate
+[[story]]
+id = "S7.1"
+epic = "E7"
+group = "multirate"
+title = "Decimator and interpolator"
+story = "As a user I want decimator and interpolator blocks with anti-alias design."
+ac = ["Alias attenuation meets spec", "fs_out and latency correct"]
+points = 3
+deps = ["S3.3"]
+status = "todo"
+
+[[story]]
+id = "S7.2"
+epic = "E7"
+group = "multirate"
+title = "Polyphase rational resampler"
+story = "As a user I want a polyphase rational resampler."
+ac = ["Matches resample_poly"]
+points = 3
+deps = ["S7.1"]
+status = "todo"
+
+[[story]]
+id = "S7.3"
+epic = "E7"
+group = "multirate"
+title = "Uniform DFT polyphase analysis bank"
+story = "As a user I want a uniform DFT polyphase analysis bank with M channels and P taps per branch."
+ac = ["Equals the windowed FFT for P = 1"]
+points = 5
+deps = ["S7.1", "S4.1"]
+status = "todo"
+
+[[story]]
+id = "S7.4"
+epic = "E7"
+group = "multirate"
+title = "WOLA analysis/synthesis"
+story = "As a user I want WOLA analysis and synthesis."
+ac = ["Reconstruction error documented"]
+points = 3
+deps = ["S7.3"]
+status = "todo"
+
+# ============================================== groups: wavelets, adaptive
+[[story]]
+id = "S8.1"
+epic = "E8"
+group = "wavelets"
+title = "DWT / IDWT"
+story = "As a user I want a discrete wavelet transform with perfect reconstruction (Haar, Daubechies, Symlets)."
+ac = ["Reconstruction error < 1e-10", "Coefficients match PyWavelets (test-only dependency)"]
+points = 5
+deps = ["S3.1"]
+status = "todo"
+
+[[story]]
+id = "S8.2"
+epic = "E8"
+group = "wavelets"
+title = "Wavelet packets and best basis"
+story = "As a user I want wavelet packet decomposition with a best-basis search."
+ac = ["Energy preserved", "Best basis for a known test signal as expected"]
+points = 3
+deps = ["S8.1"]
+status = "todo"
+
+[[story]]
+id = "S8.3"
+epic = "E8"
+group = "wavelets"
+title = "Streaming DWT block"
+story = "As a user I want a streaming DWT block."
+ac = ["Passes chunking test", "Latency documented per level"]
+points = 3
+deps = ["S8.1", "S1.2"]
+status = "todo"
+
+[[story]]
+id = "S9.1"
+epic = "E9"
+group = "adaptive"
+title = "LMS and NLMS"
+story = "As a user I want LMS and NLMS adaptive filters."
+ac = ["System identification converges to the true FIR within tolerance", "Real and complex"]
+points = 3
+deps = ["S3.3"]
+status = "todo"
+
+[[story]]
+id = "S9.2"
+epic = "E9"
+group = "adaptive"
+title = "RLS"
+story = "As a user I want an RLS adaptive filter."
+ac = ["Converges faster than NLMS on the same problem, shown in a test", "Numerically stable over 1e6 samples"]
+points = 3
+deps = ["S9.1"]
+status = "todo"
+
+[[story]]
+id = "S9.3"
+epic = "E9"
+group = "adaptive"
+title = "Adaptive noise cancellation example"
+story = "As a reader I want an example of adaptive noise cancellation with convergence statistics."
+ac = ["Learning curves averaged over Monte Carlo runs with CIs"]
+points = 2
+deps = ["S9.2", "S16.3"]
+status = "todo"
+
+# ========================================================== group: features
+[[story]]
+id = "S10.2"
+epic = "E10"
+group = "features"
+title = "Time-domain features"
+story = "As a user I want RMS, envelope (Hilbert), zero-crossing rate and crest factor as blocks."
+ac = ["Validated on signals with known values", "Pass chunking test"]
+points = 2
+deps = ["S1.2"]
+status = "todo"
+
+[[story]]
+id = "S10.3"
+epic = "E10"
+group = "features"
+title = "Spectral features"
+story = "As a user I want spectral centroid, flatness, roll-off and band power."
+ac = ["Validated on multitone and noise ground truth"]
+points = 2
+deps = ["S4.2"]
+status = "todo"
+
+[[story]]
+id = "S10.4"
+epic = "E10"
+group = "features"
+title = "OS-CFAR, GO/SO-CFAR and peak picking"
+story = "As a user I want more CFAR variants and a peak picker."
+ac = ["Pfa matches theory within MC CI for each variant"]
+points = 3
+deps = ["S10.1", "S16.3"]
+status = "todo"
+
+# ============================================================= group: optim
+[[story]]
+id = "S11.3"
+epic = "E11"
+group = "optim"
+title = "Operation-count cost model"
+story = "As an optimiser I need the compute cost of a pipeline, so that accuracy can be traded against cost."
+ac = ["Each block reports multiplies/adds per input sample", "Pipeline sums them", "Checked against hand counts for FIR, FFT, CFAR"]
+points = 3
+deps = ["S5.1"]
+status = "todo"
+
+[[story]]
+id = "S17.1"
+epic = "E17"
+group = "optim"
+title = "Parameter spaces"
+story = "As a user I want parameter spaces derived from block configs (ranges, choices, log scale)."
+ac = ["Space round-trips to YAML", "Invalid configs rejected"]
+points = 2
+deps = ["S1.5", "S5.2"]
+status = "todo"
+
+[[story]]
+id = "S17.2"
+epic = "E17"
+group = "optim"
+title = "Bayesian optimisation"
+story = "As a user I want Bayesian optimisation of a pipeline against a Monte Carlo objective."
+ac = ["Finds the known optimum of a filter design toy problem within budget"]
+points = 3
+deps = ["S17.1", "S16.2"]
+status = "todo"
+notes = "Needs Optuna (ask first)."
+
+[[story]]
+id = "S17.3"
+epic = "E17"
+group = "optim"
+title = "Multi-objective optimisation"
+story = "As a user I want multi-objective optimisation with a Pareto front (accuracy vs cost)."
+ac = ["Pareto plot and table of non-dominated configs exported"]
+points = 3
+deps = ["S17.2", "S11.3"]
+status = "todo"
+
+[[story]]
+id = "S17.4"
+epic = "E17"
+group = "optim"
+title = "Robust optimisation"
+story = "As a user I want robust optimisation (objective = worst case or percentile over scenarios)."
+ac = ["Robust optimum degrades less under impairment shift than the nominal optimum, shown in a test"]
+points = 3
+deps = ["S17.2"]
+status = "todo"
+
+[[story]]
+id = "S17.5"
+epic = "E17"
+group = "optim"
+title = "Optimisation report"
+story = "As a user I want an optimisation report (best config, history, sensitivity)."
+ac = ["Markdown and figures from one command"]
+points = 2
+deps = ["S17.3"]
+status = "todo"
+
+[[story]]
+id = "S17.6"
+epic = "E17"
+group = "optim"
+title = "Showcase: optimised detection chain"
+story = "As a reader I want an end-to-end example: simulate, verify, optimise a detection chain."
+ac = ["Tone-in-noise scenario, window/band/CFAR parameters tuned", "Pareto front Pd vs ops with CIs"]
+points = 3
+deps = ["S17.3", "S16.6"]
+status = "todo"
+
+[[story]]
+id = "S0.8"
+epic = "E0"
+group = "optim"
+title = "Publish to TestPyPI"
+story = "As a user I want to install sigstack from a package index."
+ac = ["Trusted publishing to TestPyPI on tag", "Install works in a clean env"]
+points = 2
+deps = ["S0.7", "S0.3"]
+status = "todo"
+
+# ======================================== groups: radar-core, radar-ext
+[[story]]
+id = "S13.1"
+epic = "E13"
+group = "radar-core"
+title = "Complex IQ consistency"
+story = "As a user I want complex IQ signals handled consistently by all blocks."
+ac = ["Complex dtype passes through filters, spectral and detection", "Tests with complex input for every block"]
+points = 3
+deps = ["S1.4", "S3.3", "S4.1"]
+status = "todo"
+
+[[story]]
+id = "S14.1"
+epic = "E14"
+group = "radar-core"
+title = "Radar waveforms"
+story = "As a user I want radar waveforms (pulsed LFM, FMCW chirp, Barker and Frank codes)."
+ac = ["Bandwidth and duration match parameters"]
+points = 2
+deps = ["S13.1"]
+status = "todo"
+
+[[story]]
+id = "S14.2"
+epic = "E14"
+group = "radar-core"
+title = "Point-target scene simulator"
+story = "As a tester I want a point-target scene simulator (range, radial velocity, amplitude, noise)."
+ac = ["Ground truth returned with the data cube", "Seeded"]
+points = 3
+deps = ["S14.1", "S2.1"]
+status = "todo"
+
+[[story]]
+id = "S14.3"
+epic = "E14"
+group = "radar-core"
+title = "Pulse compression"
+story = "As a user I want pulse compression via matched filter."
+ac = ["Peak at true range", "Sidelobe level matches theory for the waveform"]
+points = 3
+deps = ["S14.1", "S3.3"]
+status = "todo"
+
+[[story]]
+id = "S14.4"
+epic = "E14"
+group = "radar-core"
+title = "Range-Doppler map"
+story = "As a user I want a range-Doppler map from an FMCW data cube (fast-time x slow-time FFT)."
+ac = ["Simulated targets appear at correct range and velocity bins", "Window choice per axis"]
+points = 5
+deps = ["S14.2", "S4.1"]
+status = "todo"
+
+[[story]]
+id = "S14.5"
+epic = "E14"
+group = "radar-core"
+title = "2D CA-CFAR"
+story = "As a user I want 2D CA-CFAR on the range-Doppler map."
+ac = ["False-alarm rate matches the set Pfa on noise-only data"]
+points = 3
+deps = ["S14.4", "S10.1"]
+status = "todo"
+
+[[story]]
+id = "S14.8"
+epic = "E14"
+group = "radar-ext"
+title = "Target list and scoring"
+story = "As a tester I want detections clustered into a target list and scored against ground truth."
+ac = ["Peak grouping and centroiding to range/velocity", "Pd, false alarms and range/velocity RMSE per run"]
+points = 3
+deps = ["S14.5"]
+status = "todo"
+
+[[story]]
+id = "S14.6"
+epic = "E14"
+group = "radar-ext"
+title = "MTI / clutter cancellation"
+story = "As a user I want MTI / clutter cancellation."
+ac = ["Stationary clutter suppressed by the stated amount, moving target kept"]
+points = 2
+deps = ["S14.4"]
+status = "todo"
+
+[[story]]
+id = "S14.7"
+epic = "E14"
+group = "radar-core"
+title = "Ambiguity function and resolution calculator"
+story = "As a user I want an ambiguity function and a resolution calculator."
+ac = ["Results match the FMCW reference relations in ROADMAP section 2.7"]
+points = 2
+deps = ["S14.1"]
+status = "todo"
+
+[[story]]
+id = "S14.9"
+epic = "E14"
+group = "radar-ext"
+title = "FMCW radar example"
+story = "As a reader I want an end-to-end FMCW example: scene, range-Doppler, CFAR, target list."
+ac = ["Runs from one YAML config", "Figures in the docs"]
+points = 2
+deps = ["S14.8", "S5.3"]
+status = "todo"
+
+[[story]]
+id = "S6.5"
+epic = "E6"
+group = "radar-ext"
+title = "C++ range-Doppler and CFAR kernels"
+story = "As a Monte Carlo user I want the radar hot path in C++, so that 1e6 trials are feasible."
+ac = ["Equal to the Python reference", "Speed-up measured with the benchmark harness"]
+points = 5
+deps = ["S6.2", "S14.5"]
+status = "todo"
+
+# =============================================== group: showcase-radar-opt
+[[story]]
+id = "S14.10"
+epic = "E14"
+group = "showcase-radar-opt"
+title = "Radar showcase: simulate, verify, optimise"
+story = "As a reader I want the FMCW chain verified by Monte Carlo and its CFAR/window parameters optimised over an SNR and clutter distribution."
+ac = ["Pd at fixed Pfa with CIs", "Pareto front Pd vs operations per frame", "Headline figure for the README"]
+points = 3
+deps = ["S14.9", "S17.3", "S16.4"]
+status = "todo"
+
+# ================================================== groups: rf, arrays
+[[story]]
+id = "S13.2"
+epic = "E13"
+group = "rf"
+title = "NCO / mixer and DDC"
+story = "As a user I want an NCO/mixer and a DDC block (mix, low-pass, decimate)."
+ac = ["Tone at fc lands at 0 Hz", "Image rejection meets spec"]
+points = 3
+deps = ["S13.1", "S7.1"]
+status = "todo"
+
+[[story]]
+id = "S13.3"
+epic = "E13"
+group = "rf"
+title = "Raw IQ and SigMF input"
+story = "As a user I want to read raw IQ and SigMF recordings."
+ac = ["Metadata (fs, centre frequency) mapped to block parameters"]
+points = 2
+deps = ["S13.1"]
+status = "todo"
+
+[[story]]
+id = "S13.4"
+epic = "E13"
+group = "rf"
+title = "AM/FM demodulation"
+story = "As a user I want AM/FM demodulation."
+ac = ["Recovers a known message tone, SNR measured"]
+points = 3
+deps = ["S13.2"]
+status = "todo"
+
+[[story]]
+id = "S13.5"
+epic = "E13"
+group = "rf"
+title = "PSK/QAM with pulse shaping"
+story = "As a user I want PSK/QAM modulation with raised-cosine pulse shaping and a matched filter."
+ac = ["Zero ISI at symbol instants", "EVM function and constellation plot", "BER vs Eb/N0 matches theory within MC CI"]
+points = 5
+deps = ["S13.2", "S16.3"]
+status = "todo"
+
+[[story]]
+id = "S13.6"
+epic = "E13"
+group = "rf"
+title = "Impairment estimation and correction"
+story = "As a user I want IQ imbalance, DC offset and frequency offset estimation and correction."
+ac = ["Image suppression and residual offset documented on simulated impairments"]
+points = 3
+deps = ["S13.5"]
+status = "todo"
+
+[[story]]
+id = "S15.1"
+epic = "E15"
+group = "arrays"
+title = "ULA model and steering vectors"
+story = "As a user I want a uniform linear array model with steering vectors."
+ac = ["Array response matches the analytic steering vector"]
+points = 2
+deps = ["S13.1"]
+status = "todo"
+
+[[story]]
+id = "S15.2"
+epic = "E15"
+group = "arrays"
+title = "Delay-and-sum beamforming"
+story = "As a user I want delay-and-sum beamforming."
+ac = ["Main lobe and grating lobes as predicted"]
+points = 3
+deps = ["S15.1"]
+status = "todo"
+
+[[story]]
+id = "S15.3"
+epic = "E15"
+group = "arrays"
+title = "Angle estimation for MIMO radar"
+story = "As a user I want angle estimation (angle FFT, later MUSIC) for a MIMO radar cube."
+ac = ["Simulated target angles recovered within resolution"]
+points = 5
+deps = ["S15.2", "S14.4"]
+status = "todo"
+
+# ======================================================== group: surrogates
+[[story]]
+id = "S18.1"
+epic = "E18"
+group = "surrogates"
+title = "Spike: GP surrogate"
+story = "As an optimiser user I want a surrogate trained on MC history to pre-screen candidates."
+ac = ["Same optimum with fewer full simulations", "Saving documented"]
+points = 5
+deps = ["S17.2"]
+status = "todo"
+
+[[story]]
+id = "S18.2"
+epic = "E18"
+group = "surrogates"
+title = "Differentiable FIR / window design"
+story = "As a user I want gradient-based FIR or window design through a differentiable pipeline."
+ac = ["Designed filter meets spec", "Compared with Parks-McClellan"]
+points = 5
+deps = ["S3.1", "S2.2"]
+status = "todo"
+notes = "ML backend (JAX or PyTorch) still open."
+
+# ============================================================ group: polish
+[[story]]
+id = "S12.1"
+epic = "E12"
+group = "polish"
+title = "Audio example"
+story = "As a reader I want an audio example (denoising/EQ with spectrogram before/after)."
+ac = ["Runs from one config", "Only synthetic or openly licensed audio"]
+points = 2
+deps = ["S5.3", "S4.1"]
+status = "todo"
+
+[[story]]
+id = "S12.2"
+epic = "E12"
+group = "polish"
+title = "EEG band power example"
+story = "As a reader I want an EEG band-power example on a public dataset."
+ac = ["Dataset license checked and stated", "Delta to beta band power over time"]
+points = 3
+deps = ["S10.3", "S3.3"]
+status = "todo"
+
+[[story]]
+id = "S12.3"
+epic = "E12"
+group = "polish"
+title = "Vibration example"
+story = "As a reader I want a vibration / bearing-fault style example with envelope analysis."
+ac = ["Synthetic or openly licensed data", "Fault frequency detected"]
+points = 3
+deps = ["S10.2", "S3.3"]
+status = "todo"
+
+[[story]]
+id = "S12.4"
+epic = "E12"
+group = "polish"
+title = "Tutorials and theory pages"
+story = "As a reader I want tutorials and theory pages for the main modules."
+ac = ["One tutorial per domain example", "Theory pages with references"]
+points = 3
+deps = ["S0.4"]
+status = "todo"
+
+[[story]]
+id = "S12.5"
+epic = "E12"
+group = "polish"
+title = "API review and freeze"
+story = "As a user I want a stable 1.0 API."
+ac = ["Public API reviewed and documented", "Deprecation and semver policy written"]
+points = 3
+deps = ["S5.2"]
+status = "todo"
+
+[[story]]
+id = "S12.6"
+epic = "E12"
+group = "polish"
+title = "README and results summary"
+story = "As a reviewer I want to understand the project in two minutes."
+ac = ["Headline figure, results table with hardware, quickstart tested in CI"]
+points = 2
+deps = ["S12.4"]
+status = "todo"
+
+# ========================================================== group: embedded
+[[story]]
+id = "S19.1"
+epic = "E19"
+group = "embedded"
+title = "Spike: board and cross toolchain"
+story = "As a developer I want a Cortex-M board and cross-compilation set up, so that the C++ core can run on a microcontroller."
+ac = ["Board chosen and documented (cost, FPU, RAM)", "CMake toolchain file, cross build in CI", "Blinky plus UART output"]
+points = 3
+deps = ["S6.4"]
+status = "todo"
+notes = "Hardware purchase needed (STM32 Nucleo class, roughly 25-60 EUR)."
+
+[[story]]
+id = "S19.2"
+epic = "E19"
+group = "embedded"
+title = "Allocation-free C++ API"
+story = "As an embedded developer I want the processing path without heap allocation or exceptions."
+ac = ["Static buffers / std::span interfaces", "Build with -fno-exceptions -fno-rtti", "Allocation counter test on the host"]
+points = 5
+deps = ["S6.4"]
+status = "todo"
+
+[[story]]
+id = "S19.3"
+epic = "E19"
+group = "embedded"
+title = "Fixed-point FIR and FFT"
+story = "As an embedded developer I want Q15/Q31 variants with known quantisation error."
+ac = ["Error vs float analysed by Monte Carlo with CIs", "SNR loss documented per word length"]
+points = 5
+deps = ["S19.2", "S16.3"]
+status = "todo"
+
+[[story]]
+id = "S19.4"
+epic = "E19"
+group = "embedded"
+title = "Range-Doppler and CFAR on Cortex-M"
+story = "As a reader I want the radar chain running on the microcontroller with measured cycle counts."
+ac = ["Cycle counts via DWT counter", "Comparison with CMSIS-DSP for FFT and FIR"]
+points = 5
+deps = ["S19.1", "S19.2", "S6.5"]
+status = "todo"
+
+[[story]]
+id = "S19.5"
+epic = "E19"
+group = "embedded"
+title = "Hardware-in-the-loop test"
+story = "As a developer I want the PC to stream synthetic data to the board and compare the results."
+ac = ["Results equal to the host reference within fixed-point tolerance", "Runs from one command"]
+points = 5
+deps = ["S19.4"]
+status = "todo"
+
+# =========================================================== group: learned
+[[story]]
+id = "S18.3"
+epic = "E18"
+group = "learned"
+title = "NN detector vs CFAR"
+story = "As a reader I want a small NN detector compared with CFAR on identical Monte Carlo scenarios."
+ac = ["ROC comparison with CIs", "Honest result either way"]
+points = 5
+deps = ["S14.8", "S16.4"]
+status = "todo"
+notes = "After v1.0 (non-goal for v1.0)."

@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Planning system from the kickoff kit: `docs/plan/` (backlog and calendar as TOML, generated plan, planning process, decision log), `scripts/plan.py`, `scripts/sync_issues.py`, Sprint 2 draft, Claude Code commands `/refine`, `/plan-sprint`, `/sprint-review`, `/replan`, `/release`; pixi tasks `plan` and `plan-check`, the latter part of `check` and CI. Replaces `scripts/create_backlog.sh`.
 - Pull request template, issue forms (story, bug, spike), CONTRIBUTING with branch naming, commit and merge rules.
 - GitHub Actions CI on Ubuntu and Windows: lint, type check, tests; JUnit report uploaded on failure. CI badge in the README.
 - Code quality tooling: ruff (lint + format) and mypy (strict) configured in `pyproject.toml`, pre-commit hooks, `.clang-format`, CONTRIBUTING section on local checks.

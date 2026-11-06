@@ -39,11 +39,13 @@ testpaths = ["tests"]
 line-length = 100
 target-version = "py311"
 src = ["python", "tests"]
+# The planning scripts are imported unchanged from the kickoff kit while the plan settles.
+extend-exclude = ["scripts"]
 
 [tool.ruff.format]
 # ruff also formats Python blocks in Markdown. The planning documents hold illustrative
 # snippets and are mirrored in the owner's notes, so they stay as written.
-exclude = ["docs/ROADMAP.md", "docs/KICKOFF.md", "docs/sprints/**"]
+exclude = ["docs/ROADMAP.md", "docs/KICKOFF.md", "docs/sprints/**", "docs/plan/**"]
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "B", "UP", "N", "NPY", "RUF", "D"]

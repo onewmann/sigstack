@@ -1,7 +1,9 @@
-# sigstack: Reusable Signal Processing Toolkit
 
-Architecture and agile development plan
-Status: draft, 2026-11-06
+# sigstack roadmap
+
+Architecture, way of working and release strategy. Status: draft, 06.11.2026.
+
+The backlog and the sprint schedule are not maintained here. They live in `docs/plan/` as data and are generated: see section 4.
 
 ---
 
@@ -117,6 +119,7 @@ The same pipeline as YAML, runnable with `sigstack run config.yaml`.
 | `metrics` | SNR, frequency response, ripple, attenuation, group delay, cost model | |
 | `bench` | timing harness, results as JSON, comparison plots | |
 | `sim` | scenario definition (signal + impairments + parameter distributions), Monte Carlo runner (seeded, parallel, resumable), estimators with confidence intervals, ROC / $P_d$–SNR curves, Latin hypercube and Sobol sampling, sensitivity analysis | importance sampling for rare events ($P_{fa} < 10^{-6}$) |
+| `embedded` (C++ only) | | allocation-free API, Q15/Q31 fixed point, Cortex-M port with cycle counts, hardware-in-the-loop test (E19) |
 | `optim` | parameter spaces from block configs, Bayesian optimisation (Optuna, TPE / GP), multi-objective search (NSGA-II) with Pareto front, robust optimisation (objective = MC statistic, e.g. worst-case or 5th percentile) | surrogate models (Gaussian process, small NN) replacing expensive simulations, differentiable DSP in JAX/PyTorch for gradient-based filter design |
 
 ### 2.4 Tech stack
@@ -139,6 +142,8 @@ The same pipeline as YAML, runnable with `sigstack run config.yaml`.
 | Optimisation | Optuna (TPE, GP, NSGA-II), optional BoTorch |
 | Surrogates / learned DSP | scikit-learn GP, PyTorch or JAX (optional extra `sigstack[ml]`) |
 | Experiment tracking | Hydra-style sweeps from YAML, results as Parquet, optional MLflow |
+| Planning | `docs/plan/backlog.toml` + `plan.toml`, `scripts/plan.py` (standard library only) |
+| Embedded (E19) | arm-none-eabi-gcc, CMake toolchain file, CMSIS-DSP as comparison baseline |
 
 ### 2.5 Simulation-based design loop
 
@@ -189,12 +194,38 @@ sigstack/
 │                    pipeline, plots}
 ├── examples/{audio, eeg, vibration, radar, rf}
 ├── experiments/{configs, run.py}
-├── docs/
+├── docs/{plan, sprints}   ROADMAP, PLANNING, DECISIONS, generated PLAN/BACKLOG
+├── scripts/              plan.py, sync_issues.py
 ├── tests/
 ├── pixi.toml  pyproject.toml  CMakeLists.txt
 ├── .devcontainer/  .github/
 └── README.md  CHANGELOG.md  CONTRIBUTING.md
 ```
+
+### 2.7 Reference relations
+
+Used as test oracles and in the docs.
+
+FMCW radar (bandwidth $B$, chirp duration $T_c$, $N$ chirps per frame, wavelength $\lambda$, beat frequency $f_b$):
+
+$$
+\Delta R = \frac{c}{2B}, \qquad
+R = \frac{c\, f_b\, T_c}{2B}, \qquad
+\Delta v = \frac{\lambda}{2 N T_c}, \qquad
+v_{\max} = \frac{\lambda}{4 T_c}
+$$
+
+Uniform linear array (element spacing $d$, element index $n$, angle $\theta$):
+
+$$
+a(\theta)_n = e^{-j 2\pi n d \sin\theta / \lambda}
+$$
+
+CA-CFAR with $N$ training cells on square-law detected Gaussian noise (threshold factor $\alpha$ for a given $P_{fa}$):
+
+$$
+\alpha = N\left(P_{fa}^{-1/N} - 1\right)
+$$
 
 ---
 
@@ -225,7 +256,7 @@ Stories with 8 points are split before they enter a sprint.
 - **Issues** for every story and bug, with templates (user story, bug, spike)
 - **Projects board**: Backlog → Ready → In progress → Review → Done
 - **Fields**: points, epic, sprint (iteration field), priority
-- **Milestones** = releases (v0.1.0 … v1.0.0)
+- **Milestones** = releases of the active profile (created by `scripts/sync_issues.py`)
 - **Labels**: `epic:*`, `type:feature|bug|docs|infra|spike`, `good first issue`
 - **Branches**: `main` protected, short-lived feature branches, squash merge via pull request, CI must pass
 - **Commits**: Conventional Commits (`feat:`, `fix:`, `docs:`), changelog generated from them
@@ -242,263 +273,109 @@ Stories with 8 points are split before they enter a sprint.
 - Code merged to `main` via pull request, CI green
 - Unit tests; for blocks also the chunking test
 - C++ kernels: tested against Python reference, tolerance stated
-- Public API has docstrings, appears in the docs
+- Public API has docstrings and appears in the API docs (from S0.4 on; before that, docstrings only)
 - Example or test with a synthetic signal
 - Changelog entry
 
 ---
 
-## 4. Product backlog
+## 4. Backlog, releases and schedule
 
-### 4.1 Epics
+### 4.1 Where things live
 
-| ID | Epic | Release |
+| File | Content | Edited by |
 |---|---|---|
-| E0 | Project infrastructure | v0.1 |
-| E1 | Core and block model | v0.1 |
-| E2 | Signal generators and metrics | v0.1 |
-| E3 | Filters | v0.2 |
-| E4 | Spectral analysis | v0.2 |
-| E5 | Pipeline, config, CLI | v0.3 |
-| E6 | C++ core and bindings | v0.3 |
-| E7 | Multirate and filter banks | v0.4 |
-| E8 | Wavelets | v0.5 |
-| E9 | Adaptive filters | v0.5 |
-| E10 | Features and detection | v0.6 |
-| E11 | Benchmarking | v0.4 |
-| E12 | Domain examples and docs | ongoing, finished in v1.0 |
-| E13 | RF / communications | v0.7 |
-| E14 | Radar | v0.7 |
-| E15 | Antenna arrays and beamforming | v0.8 |
-| E16 | Simulation and Monte Carlo | v0.4 |
-| E17 | Optimisation | v0.6 |
-| E18 | Surrogates and differentiable DSP | v0.9 |
+| `docs/plan/backlog.toml` | epics and all stories (story, acceptance criteria, points, dependencies, status) | Oli / Claude Code during refinement and review |
+| `docs/plan/plan.toml` | calendar with capacity factors, velocity, actual points per sprint, release profiles | sprint review |
+| `docs/plan/PLAN.md` | release forecast, sprint schedule, profile comparison, warnings | generated by `scripts/plan.py` |
+| `docs/plan/BACKLOG.md` | all stories per epic with planned sprint | generated |
+| `docs/sprints/sprint-NN.md` | task breakdown with Claude Code prompts, review and retro | `/plan-sprint`, `/sprint-review` |
+| `docs/plan/DECISIONS.md` | decision log | whenever the plan changes direction |
 
-### 4.2 User stories (priority order)
+`python scripts/plan.py --check` validates the backlog (unique ids, known epics, allowed points, dependencies exist, no cycles, no dependency on a later release). It runs in CI from Sprint 1 on, so the plan cannot silently break.
 
-**E0 Infrastructure**
+### 4.2 Epics
 
-| ID | Story | AC | Pts |
-|---|---|---|---|
-| S0.1 | As a developer I want a pixi environment so that the setup runs with one command on Fedora and Windows | `pixi install && pixi run check` works on both | 2 |
-| S0.2 | As a developer I want CI on every push so that broken code never reaches `main` | Workflow runs lint + tests, required for merge | 2 |
-| S0.3 | As a user I want `pip install .` to build the package so that I can use it in other projects | scikit-build-core build, wheel installs in a clean env | 3 |
-| S0.4 | As a reader I want a docs site so that I can learn the API | MkDocs on GitHub Pages, auto-deploy | 2 |
-| S0.5 | As a developer I want pre-commit hooks so that style is consistent | ruff, mypy, clang-format active | 1 |
+| ID | Epic |
+|---|---|
+| E0 | Project infrastructure |
+| E1 | Core and block model |
+| E2 | Signal generators and metrics |
+| E3 | Filters |
+| E4 | Spectral analysis |
+| E5 | Pipeline, config, CLI |
+| E6 | C++ core and bindings |
+| E7 | Multirate and filter banks |
+| E8 | Wavelets |
+| E9 | Adaptive filters |
+| E10 | Features and detection |
+| E11 | Benchmarking and cost model |
+| E12 | Domain examples, docs, v1.0 |
+| E13 | RF / communications |
+| E14 | Radar |
+| E15 | Antenna arrays and beamforming |
+| E16 | Simulation and Monte Carlo |
+| E17 | Optimisation |
+| E18 | Surrogates and learned components |
+| E19 | Embedded port (Cortex-M) |
 
-**E1 Core and block model**
+Stories are grouped into work packages (`group`, e.g. `filters`, `mc`, `radar-core`). A release profile in `plan.toml` maps groups to releases. Changing the order of the roadmap therefore means editing one list, not 90 stories.
 
-| ID | Story | AC | Pts |
-|---|---|---|---|
-| S1.1 | As a user I want a common `Block` interface so that all steps are interchangeable | Protocol defined, documented, used by one dummy block | 2 |
-| S1.2 | As a developer I want an automatic chunking test so that every stateful block is stream-safe | Hypothesis test applied to all registered blocks | 3 |
-| S1.3 | As a user I want standard windows (Hann, Hamming, Blackman, Blackman-Harris, Kaiser, flat-top) | Match `scipy.signal.get_window` to 1e-12 | 1 |
-| S1.4 | As a developer I want complex dtypes and multichannel arrays (channels × samples) in the block contract from the start, so that RF, radar and array processing need no refactor later | Dummy block passes tests for real, complex, 1-channel and N-channel input | 2 |
+### 4.3 Release profiles
 
-**E2 Signals and metrics**
+Two orders are kept side by side until the decision in section 6 is made:
 
-| ID | Story | AC | Pts |
-|---|---|---|---|
-| S2.1 | As a tester I want seeded test signals (multitone, chirp, noise, impulse, AM/FM) with known ground truth | Generators return signal + metadata (frequencies, energies) | 3 |
-| S2.2 | As a user I want SNR, frequency response, ripple, attenuation and group delay metrics | Validated on textbook filters | 3 |
-| S2.3 | As a user I want standard plots (magnitude/phase, spectrogram, band energies) | One function per plot, consistent style | 2 |
+- **default**: breadth first. General modules, Monte Carlo and optimisation, then radar, RF, arrays. Embedded port after v1.0.
+- **showcase**: FMCW radar chain directly after the pipeline, then Monte Carlo, optimisation and the embedded port. Breadth afterwards.
 
-**E3 Filters**
+Snapshot from 06.11.2026 with velocity 8 (the current numbers are always in `PLAN.md`):
 
-| ID | Story | AC | Pts |
-|---|---|---|---|
-| S3.1 | As a user I want FIR design by window method, Parks-McClellan and least squares | Results match SciPy, spec checked with metrics | 3 |
-| S3.2 | As a user I want IIR design (Butterworth, Chebyshev I/II, elliptic) as SOS | Stable, matches SciPy | 2 |
-| S3.3 | As a user I want streaming FIR and IIR blocks | Pass chunking test | 3 |
-| S3.4 | As a user I want zero-phase offline filtering | Same result as `filtfilt` within tolerance | 1 |
-
-**E4 Spectral**
-
-| ID | Story | AC | Pts |
-|---|---|---|---|
-| S4.1 | As a user I want STFT/ISTFT with perfect reconstruction check | COLA check, reconstruction error < 1e-10 | 3 |
-| S4.2 | As a user I want Welch PSD and band energy for arbitrary band edges | Parseval check on multitone ground truth | 3 |
-| S4.3 | As a user I want cross-spectrum and coherence | Matches SciPy | 2 |
-
-**E5 Pipeline**
-
-| ID | Story | AC | Pts |
-|---|---|---|---|
-| S5.1 | As a user I want to chain blocks in a `Pipeline` | Sample rates and latency propagate correctly | 3 |
-| S5.2 | As a user I want to define pipelines in YAML | Round trip config ↔ object | 3 |
-| S5.3 | As a user I want a CLI `sigstack run config.yaml` | Reads input file, writes results + figures | 2 |
-
-**E6 C++ core**
-
-| ID | Story | AC | Pts |
-|---|---|---|---|
-| S6.1 | Spike: nanobind setup with one kernel (FIR) | Builds in CI on Linux + Windows | 3 |
-| S6.2 | C++ streaming FIR and SOS IIR | Equal to Python reference, faster than pure NumPy | 5 |
-| S6.3 | C++ STFT on pocketfft, optional FFTW | Equal results with both backends | 5 |
-| S6.4 | C++ library usable without Python | CMake target + minimal C++ example | 2 |
-
-**E7 Multirate**
-
-| ID | Story | AC | Pts |
-|---|---|---|---|
-| S7.1 | Decimator and interpolator blocks with anti-alias design | Alias attenuation meets spec | 3 |
-| S7.2 | Polyphase rational resampler | Matches `resample_poly` | 3 |
-| S7.3 | Uniform DFT polyphase analysis bank, $M$ channels, $P$ taps per branch | Equals windowed FFT for $P=1$ | 5 |
-| S7.4 | WOLA analysis/synthesis | Reconstruction error documented | 3 |
-
-**E13 RF / communications**
-
-| ID | Story | AC | Pts |
-|---|---|---|---|
-| S13.1 | As a user I want complex IQ signals handled consistently by all blocks | Complex dtype passes through filters, spectral, multirate; tests with complex input | 3 |
-| S13.2 | As a user I want an NCO/mixer and a DDC block (mix, low-pass, decimate) | Tone at $f_c$ lands at 0 Hz, image rejection meets spec | 3 |
-| S13.3 | As a user I want to read raw IQ and SigMF recordings | Metadata (fs, centre frequency) mapped to block parameters | 2 |
-| S13.4 | As a user I want AM/FM demodulation | Recovers a known message tone, SNR measured | 3 |
-| S13.5 | As a user I want PSK/QAM modulation with raised-cosine pulse shaping and a matched filter | Zero ISI at symbol instants, EVM function, constellation plot | 5 |
-| S13.6 | As a user I want IQ imbalance, DC offset and frequency offset estimation and correction | Image suppression and residual offset documented on simulated impairments | 3 |
-
-**E14 Radar**
-
-| ID | Story | AC | Pts |
-|---|---|---|---|
-| S14.1 | As a user I want radar waveforms (pulsed LFM, FMCW chirp, Barker and Frank codes) | Bandwidth and duration match parameters | 2 |
-| S14.2 | As a tester I want a point-target scene simulator (range, radial velocity, amplitude, noise) | Ground truth returned with the data cube | 3 |
-| S14.3 | As a user I want pulse compression via matched filter | Peak at true range, sidelobe level matches theory for the waveform | 3 |
-| S14.4 | As a user I want a range-Doppler map from an FMCW data cube (fast-time × slow-time FFT) | Simulated targets appear at correct range and velocity bins | 5 |
-| S14.5 | As a user I want 2D CA-CFAR on the range-Doppler map | Detection and false-alarm rate checked against set $P_{fa}$ on noise-only data | 3 |
-| S14.6 | As a user I want MTI / clutter cancellation | Stationary clutter suppressed by stated amount, moving target kept | 2 |
-| S14.7 | As a user I want an ambiguity function and a resolution calculator | Results match the formulas below | 2 |
-
-Reference relations used in tests and docs (FMCW, bandwidth $B$, chirp duration $T_c$, $N$ chirps per frame, wavelength $\lambda$):
-
-$$
-\Delta R = \frac{c}{2B}, \qquad
-R = \frac{c\, f_b\, T_c}{2B}, \qquad
-\Delta v = \frac{\lambda}{2 N T_c}, \qquad
-v_{\max} = \frac{\lambda}{4 T_c}
-$$
-
-with beat frequency $f_b$.
-
-**E15 Arrays**
-
-| ID | Story | AC | Pts |
-|---|---|---|---|
-| S15.1 | As a user I want a uniform linear array model with steering vectors | Array response matches $a(\theta)_n = e^{-j 2\pi n d \sin\theta / \lambda}$ | 2 |
-| S15.2 | As a user I want delay-and-sum beamforming | Beam pattern main lobe and grating lobes as predicted | 3 |
-| S15.3 | As a user I want angle estimation (angle FFT, later MUSIC) for a MIMO radar cube | Simulated target angles recovered within resolution | 5 |
-
-**E16 Simulation and Monte Carlo**
-
-| ID | Story | AC | Pts |
-|---|---|---|---|
-| S16.1 | As a user I want to define a scenario in YAML (signal model, impairments, parameter distributions) | Scenario object validated, reproducible from seed | 3 |
-| S16.2 | As a user I want a Monte Carlo runner that executes a pipeline over N realisations in parallel | Same seed gives identical results with 1 and 8 workers; runs can be resumed | 5 |
-| S16.3 | As a user I want estimators with confidence intervals (mean, quantiles, Wilson interval for probabilities) | Coverage of the 95 % interval checked on a known distribution | 2 |
-| S16.4 | As a user I want ROC and $P_d$–SNR curves from MC results | CA-CFAR on Gaussian noise matches the analytic $P_{fa}$ within the CI | 3 |
-| S16.5 | As a user I want Latin hypercube / Sobol sweeps and Sobol sensitivity indices | Indices match a test function with known values (Ishigami) | 3 |
-
-**E17 Optimisation**
-
-| ID | Story | AC | Pts |
-|---|---|---|---|
-| S17.1 | As a user I want parameter spaces derived from block configs (ranges, choices, log scale) | Space round-trips to YAML, invalid configs rejected | 2 |
-| S17.2 | As a user I want Bayesian optimisation of a pipeline against an MC objective | Finds the known optimum of a filter design toy problem within budget | 3 |
-| S17.3 | As a user I want multi-objective optimisation with a Pareto front (e.g. accuracy vs. cost) | Pareto plot and table of non-dominated configs exported | 3 |
-| S17.4 | As a user I want robust optimisation (objective = worst case or percentile over scenarios) | Robust optimum degrades less under impairment shift than nominal optimum, shown in a test | 3 |
-| S17.5 | As a user I want an optimisation report (best config, history, sensitivity) | Generated as Markdown + figures from one command | 2 |
-
-**E18 Surrogates and differentiable DSP**
-
-| ID | Story | AC | Pts |
-|---|---|---|---|
-| S18.1 | Spike: GP surrogate trained on MC history, used to pre-screen candidates | Same optimum with fewer full simulations, saving documented | 5 |
-| S18.2 | Differentiable FIR / window design in JAX or PyTorch | Gradient-designed filter meets spec, compared with Parks-McClellan | 5 |
-| S18.3 | After v1.0 (see non-goals): small NN detector vs. CFAR on identical MC scenarios | ROC comparison with CIs, honest result either way | 5 |
-
-**E8 to E12** are refined when they come closer (backlog refinement), currently listed as epics only.
-
----
-
-## 5. Release roadmap
-
-| Release | Content | Sprints |
+| Milestone | default | showcase |
 |---|---|---|
-| v0.1.0 | Infra, block model, signals, metrics | 1 to 2 |
-| v0.2.0 | Filters, spectral analysis | 3 to 5 |
-| v0.3.0 | Pipeline + CLI, first C++ kernels | 6 to 7 |
-| v0.4.0 | Multirate, filter banks, benchmark harness, Monte Carlo runner (E16) | 8 to 10 |
-| v0.5.0 | Wavelets, adaptive filters | 11 to 12 |
-| v0.6.0 | Features, detection, optimisation (E17) | 13 to 14 |
-| v0.7.0 | RF/IQ basics, radar waveforms, pulse compression, range-Doppler, CFAR | 15 to 17 |
-| v0.8.0 | Modulation/demodulation, impairment correction, arrays and beamforming | 18 to 19 |
-| v0.9.0 | Surrogates and differentiable DSP (E18 without S18.3) | 20 to 21 |
-| v1.0.0 | API freeze, domain examples (audio, EEG, vibration, FMCW radar, digital comms), full docs | 22 |
+| v0.2.0, first version worth linking | 31.01.2027 | 31.01.2027 |
+| Simulate-verify-optimise loop | 10.10.2027 (generic) | 26.09.2027 (radar) |
+| Radar showcase | 05.12.2027 | 26.09.2027 |
+| Radar chain on Cortex-M | 18.06.2028 | 05.12.2027 |
+| v1.0.0 | 23.04.2028 | 04.06.2028 |
 
-If radar/RF becomes the main focus (e.g. for job applications), E13 and E14 can move ahead of E8 to E10, directly after v0.4.0. They only depend on filters, spectral, multirate and complex support.
+Rules for releases: at most about three sprints of points per release, every release ends with something that runs and a tag, release notes from the changelog.
 
-**Earliest point to put it on the CV:** v0.2.0 (usable, documented, CI green).
+### 4.4 Planning horizon (rolling wave)
 
----
+| Horizon | Detail |
+|---|---|
+| Current sprint | tasks with prompts in `docs/sprints/sprint-NN.md` |
+| Next sprint | stories meet the Definition of Ready (refinement mid-sprint) |
+| Next two releases | stories with acceptance criteria and estimates |
+| Later | stories may be coarse; re-estimated when they come within two releases |
 
-## 6. Sprint calendar
-
-Dates assume a start on Monday, 9 Nov 2026. Lecture-free and exam periods get reduced capacity or a pause.
-
-| Sprint | Dates | Goal | Stories | Pts |
-|---|---|---|---|---|
-| S1 | 09.11. – 22.11. | Environment and CI run | S0.1, S0.2, S0.5, S1.1, S1.3 | 8 |
-| S2 | 23.11. – 06.12. | v0.1.0: tested block model with test signals | S0.3, S1.2, S1.4, S2.1 | 11 |
-| S3 | 07.12. – 20.12. | Metrics, plots, first filters | S2.2, S2.3, S3.1 | 8 |
-| — | 21.12. – 03.01. | Break (optional: docs S0.4) | | |
-| S4 | 04.01. – 17.01. | Filters complete, STFT | S3.2, S3.3, S3.4, S4.1 | 9 |
-| S5 | 18.01. – 31.01. | v0.2.0: band energy, coherence, docs site | S4.2, S4.3, S0.4 | 7 |
-| — | Feb – mid Mar | Exam period: pause or bugs only | | |
-| S6 … | from mid Mar | Pipeline + C++ (v0.3.0), then per roadmap | E5, E6 | |
-
-The plan for S6 onward is set after the first velocity measurement.
+The update process is described in `docs/plan/PLANNING.md`.
 
 ---
 
-## 7. Sprint 1 in detail
-
-**Sprint goal:** `pixi install && pixi run check` works on Fedora and Windows, CI runs on every PR, the `Block` interface and window functions exist. Tasks with ready prompts: `docs/sprints/sprint-01.md`.
-
-| Task | Story | Est. |
-|---|---|---|
-| Create repo `onewmann/sigstack`, license, README stub, noreply author | S0.1 | 0.5 h |
-| `pixi.toml` with Python, NumPy, SciPy, pytest, hypothesis, ruff, mypy, pre-commit (compilers and CMake come with E6) | S0.1 | 1.5 h |
-| Test on Fedora desktop and Windows laptop | S0.1 | 1 h |
-| GitHub Actions matrix (ubuntu, windows): lint + tests | S0.2 | 2 h |
-| Branch protection, PR template, issue templates | S0.2 | 0.5 h |
-| pre-commit config | S0.5 | 1 h |
-| `Block` protocol + dummy gain block + test | S1.1 | 2 h |
-| Window functions + comparison tests against SciPy | S1.3 | 1.5 h |
-| GitHub Projects board with fields, enter backlog | infra | 1 h |
-| Review + retro | — | 0.5 h |
-
-Total ≈ 11.5 h.
-
----
-
-## 8. Risks
+## 5. Risks
 
 | Risk | Effect | Countermeasure |
 |---|---|---|
 | Study workload higher than planned | Sprints miss their goal | Capacity 6 h/week is conservative, pause rules for exam periods |
 | C++/Python build issues on Windows | CI blocks | Spike S6.1 early, Linux-only fallback for the C++ part |
-| Scope too broad | Nothing finished | Release after each 2 sprints, epics E8+ only refined when due |
+| Scope too broad | Nothing finished | Releases of at most three sprints, rolling-wave planning, showcase profile as fallback |
+| Forecast drifts (v1.0 about spring 2028) | Late CV milestones | Forecast recalculated every review; scope cuts decided in `/replan`, logged in DECISIONS.md |
+| Exam windows differ from the calendar assumption | Wrong capacity | Check against the ESE exam plan, edit `plan.toml` periods |
+| Hardware for E19 (Cortex-M board) | Embedded epic blocked | Spike S19.1 chooses and orders the board two sprints ahead |
 | Duplicating SciPy without benefit | Weak portfolio value | Focus on block model, streaming, C++ path and benchmarks |
-| Package name taken on PyPI | Rename later | Check name in S1 |
+| Package name taken on PyPI | Rename later | Check name in T0 |
 
 ---
 
-## 9. Open decisions
+## 6. Open decisions
 
-- [ ] Name (`sigstack` free on PyPI and GitHub?)
+Details and status in `docs/plan/DECISIONS.md`.
+
+- [ ] Name `sigstack` free on GitHub and PyPI (T0)
 - [ ] License: Apache-2.0 or MIT
-- [ ] Sprint start date
-- [ ] Weekly time budget (6 h assumed)
-- [ ] Order after v0.4.0: general modules first (E8 to E10) or radar/RF first (E13, E14)
-- [ ] ML backend for E18: JAX or PyTorch
-- [ ] Narrow scope to one showcase (e.g. FMCW radar: simulate → optimise → deploy) or keep the broad roadmap
+- [ ] Release order: profile `default` or `showcase` (see `PLAN.md`, profile comparison). Decide before Sprint 8, when the orders start to differ.
+- [ ] Embedded epic E19: keep, and if yes, which board
+- [ ] Weekly time budget (6 h assumed, velocity 8)
+- [ ] Exam windows in `plan.toml` against the ESE exam plan
+- [ ] Dependencies when due: YAML library (S5.2), Optuna (S17.2), ML backend JAX or PyTorch (S18.2)

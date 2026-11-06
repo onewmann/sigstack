@@ -21,4 +21,6 @@ test = { cmd = "pytest", description = "Run the test suite" }
 lint = { cmd = "ruff check && ruff format --check", description = "Lint and format check" }
 fmt = { cmd = "ruff check --fix --exit-zero && ruff format", description = "Auto-fix, then format" }
 typecheck = { cmd = "mypy", description = "Static type check (mypy strict)" }
-check = { depends-on = ["lint", "typecheck", "test"], description = "lint + typecheck + test" }
+plan = { cmd = "python scripts/plan.py", description = "Validate backlog, regenerate docs/plan/PLAN.md and BACKLOG.md" }
+plan-check = { cmd = "python scripts/plan.py --check", description = "Validate backlog and schedule only" }
+check = { depends-on = ["lint", "typecheck", "test", "plan-check"], description = "lint + typecheck + test + plan-check" }
