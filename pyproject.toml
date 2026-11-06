@@ -34,3 +34,40 @@ packages = ["python/sigstack"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+src = ["python", "tests"]
+
+[tool.ruff.format]
+# ruff also formats Python blocks in Markdown. The planning documents hold illustrative
+# snippets and are mirrored in the owner's notes, so they stay as written.
+exclude = ["docs/ROADMAP.md", "docs/KICKOFF.md", "docs/sprints/**"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "N", "NPY", "RUF", "D"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "numpy"
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["D"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["sigstack"]
+
+[tool.mypy]
+python_version = "3.11"
+files = ["python/sigstack", "tests"]
+mypy_path = "python"
+strict = true
+warn_unreachable = true
+
+# Tests may leave helpers and fixtures unannotated.
+[[tool.mypy.overrides]]
+module = ["tests", "tests.*"]
+disallow_untyped_defs = false
+disallow_incomplete_defs = false
+disallow_untyped_calls = false
+disallow_untyped_decorators = false

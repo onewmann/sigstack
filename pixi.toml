@@ -18,8 +18,7 @@ sigstack = { path = ".", editable = true }
 
 [tasks]
 test = { cmd = "pytest", description = "Run the test suite" }
-# lint, fmt and typecheck are placeholders until task T3 wires them to ruff and mypy.
-lint = { cmd = "echo 'lint: not configured yet (T3)'", description = "Lint and format check" }
-fmt = { cmd = "echo 'fmt: not configured yet (T3)'", description = "Format and auto-fix" }
-typecheck = { cmd = "echo 'typecheck: not configured yet (T3)'", description = "Static type check" }
+lint = { cmd = "ruff check && ruff format --check", description = "Lint and format check" }
+fmt = { cmd = "ruff check --fix --exit-zero && ruff format", description = "Auto-fix, then format" }
+typecheck = { cmd = "mypy", description = "Static type check (mypy strict)" }
 check = { depends-on = ["lint", "typecheck", "test"], description = "lint + typecheck + test" }
