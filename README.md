@@ -1,5 +1,7 @@
 # sigstack
 
+[![CI](https://github.com/onewmann/sigstack/actions/workflows/ci.yml/badge.svg)](https://github.com/onewmann/sigstack/actions/workflows/ci.yml)
+
 C++/Python toolkit for signal processing with a uniform block-processing model for offline and streaming use, and a simulation-based design loop.
 
 Status: early development. Nothing here is usable yet.
