@@ -6,10 +6,20 @@ Status: early development. Nothing here is usable yet.
 
 ## Install
 
-The package is not published. From a clone:
+The package is not published. Development setup uses [pixi](https://pixi.sh) (Linux and Windows):
 
 ```bash
-python -m pip install -e .
+git clone https://github.com/onewmann/sigstack.git
+cd sigstack
+pixi install      # creates the environment from pixi.lock
+pixi run check    # lint + typecheck + tests
+```
+
+Without pixi, from a clone (pip 25.1 or newer for `--group`):
+
+```bash
+python -m pip install -e . --group test
+python -m pytest
 ```
 
 ## Quickstart

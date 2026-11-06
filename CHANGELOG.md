@@ -9,4 +9,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- pixi environment (`pixi.toml`, `pixi.lock`) for linux-64 and win-64 with tasks `test`, `lint`, `fmt`, `typecheck`, `check`.
 - Repository skeleton: license, README, changelog, `pyproject.toml` (hatchling), package `sigstack` with `core` subpackage, import test.
