@@ -1,0 +1,36 @@
+[build-system]
+# hatchling is temporary; story S0.3 replaces it with scikit-build-core for the C++ part.
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[project]
+name = "sigstack"
+version = "0.0.1"
+description = "Signal processing toolkit: block-based DSP, C++ core, Monte Carlo design loop"
+readme = "README.md"
+license = "Apache-2.0"
+license-files = ["LICENSE"]
+requires-python = ">=3.11"
+dependencies = [
+  "numpy",
+  "scipy",
+]
+classifiers = [
+  "Development Status :: 2 - Pre-Alpha",
+  "Intended Audience :: Science/Research",
+  "Programming Language :: Python :: 3",
+  "Topic :: Scientific/Engineering",
+  "Typing :: Typed",
+]
+
+[project.urls]
+Repository = "https://github.com/onewmann/sigstack"
+
+[dependency-groups]
+test = ["pytest", "hypothesis"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["python/sigstack"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
