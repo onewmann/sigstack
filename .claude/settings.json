@@ -12,7 +12,11 @@
       "Bash(git commit:*)",
       "Bash(gh pr view:*)",
       "Bash(gh pr checks:*)",
-      "Bash(gh run view:*)"
+      "Bash(gh run view:*)",
+      "Bash(python scripts/plan.py:*)",
+      "Bash(python3 scripts/plan.py:*)",
+      "Bash(gh pr list:*)",
+      "Bash(gh issue list:*)"
     ],
     "deny": [
       "Bash(git push --force:*)",
