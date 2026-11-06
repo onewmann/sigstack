@@ -6,12 +6,12 @@
 
 | ID | Task | Story | Who | Est. | Status |
 |---|---|---|---|---|---|
-| T0 | Prerequisites and repo creation | S0.1 | Oli | 0.5 h | [ ] |
-| T1 | Repository skeleton | S0.1 | Claude Code | 0.5 h | [ ] |
-| T2 | pixi environment and tasks | S0.1 | Claude Code + Oli (Windows check) | 1.5 h | [ ] |
-| T3 | Linting, formatting, type checking, pre-commit | S0.5 | Claude Code | 1 h | [ ] |
-| T4 | GitHub Actions CI (Ubuntu + Windows) | S0.2 | Claude Code | 1.5 h | [ ] |
-| T5 | GitHub hygiene: templates, CONTRIBUTING, branch protection | S0.2 | Claude Code + Oli | 0.5 h | [ ] |
+| T0 | Prerequisites and repo creation | S0.1 | Oli | 0.5 h | [x] |
+| T1 | Repository skeleton | S0.1 | Claude Code | 0.5 h | [x] |
+| T2 | pixi environment and tasks | S0.1 | Claude Code + Oli (Windows check) | 1.5 h | [x] |
+| T3 | Linting, formatting, type checking, pre-commit | S0.5 | Claude Code | 1 h | [x] |
+| T4 | GitHub Actions CI (Ubuntu + Windows) | S0.2 | Claude Code | 1.5 h | [x] |
+| T5 | GitHub hygiene: templates, CONTRIBUTING, branch protection | S0.2 | Claude Code + Oli | 0.5 h | [x] |
 | T6 | `Block` protocol and `Gain` block | S1.1 | Claude Code | 2 h | [ ] |
 | T7 | Window functions | S1.3 | Claude Code | 1.5 h | [ ] |
 | T8 | Backlog on GitHub (labels, milestones, issues, board) | infra | Oli (`sync_issues.py`) | 1 h | [ ] |
@@ -289,4 +289,11 @@ Then in the browser: create a Project (board) "sigstack", add fields *Points* (n
 
 | Date | Task | Time | Note |
 |---|---|---|---|
-| | | | |
+| 06.11.2026 | T0 | | Repo `onewmann/sigstack` created (public), author `onewmann` with noreply address, kit on `main`; pixi 0.84.1 in `~/.local/bin` |
+| 06.11.2026 | T1 | | PR #10 merged; local checks only (no CI yet) |
+| 06.11.2026 | T2 | | PR #11 merged, closes #1; Windows laptop check still open |
+| 06.11.2026 | T3 | | PR #12 merged, closes #3 |
+| 06.11.2026 | T8 | | `create_backlog.sh` run (#1–#9), then `sync_issues.py --sprint 1/2` (#13, #14), labels moved to `epic:E<n>`; Projects board still open (browser) |
+| 06.11.2026 | T4, T5 | | Branches ready and reviewed; push blocked: the gh token lacks the `workflow` scope (`gh auth refresh -h github.com -s workflow`) |
+| 06.11.2026 | T4 | | PR #15 merged after green CI on both OS; a deliberately failing test turned CI red (run 42278663709), its revert green again |
+| 06.11.2026 | T5 | | PR #16 merged, closes #2; branch protection on `main` applied (both checks required, pinned to GitHub Actions, admins included, linear history); issue forms render without errors on GitHub |
