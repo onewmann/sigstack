@@ -5,7 +5,7 @@ from typing import Any
 import numpy as np
 import pytest
 import scipy.signal
-from numpy.testing import assert_allclose, assert_array_equal
+from numpy.testing import assert_allclose
 
 import sigstack
 import sigstack.core
@@ -60,37 +60,46 @@ def test_kaiser_matches_scipy(beta: float, n: int, sym: bool) -> None:
 @pytest.mark.parametrize("sym", [True, False])
 def test_named_function_equals_get_window(name: str, params: dict[str, Any], sym: bool) -> None:
     func = getattr(windows, name)
-    assert_array_equal(func(64, sym=sym, **params), get_window(name, 64, sym=sym, **params))
+    # Exact: get_window only dispatches to the same function.
+    assert_allclose(
+        func(64, sym=sym, **params), get_window(name, 64, sym=sym, **params), rtol=0, atol=0
+    )
 
 
 @pytest.mark.parametrize(("name", "params"), ALL_WINDOWS)
 @pytest.mark.parametrize("n", [2, 7, 64, 255])
 def test_symmetric_window_is_exactly_symmetric(name: str, params: dict[str, Any], n: int) -> None:
     w = get_window(name, n, sym=True, **params)
-    assert_array_equal(w, w[::-1])
+    assert_allclose(w, w[::-1], rtol=0, atol=0)  # exact: the second half is mirrored
 
 
 @pytest.mark.parametrize(("name", "params"), ALL_WINDOWS)
 @pytest.mark.parametrize("n", [2, 7, 64, 255])
 def test_periodic_window_is_dft_even(name: str, params: dict[str, Any], n: int) -> None:
     w = get_window(name, n, sym=False, **params)
-    assert_array_equal(w[1:], w[:0:-1])  # w[k] == w[n - k]
-    assert_array_equal(w, get_window(name, n + 1, sym=True, **params)[:n])
+    # Exact: the window is cut from the mirrored symmetric window of length n + 1.
+    assert_allclose(w[1:], w[:0:-1], rtol=0, atol=0)  # w[k] == w[n - k]
+    assert_allclose(w, get_window(name, n + 1, sym=True, **params)[:n], rtol=0, atol=0)
 
 
 @pytest.mark.parametrize(("name", "params"), ALL_WINDOWS)
 @pytest.mark.parametrize("sym", [True, False])
 def test_length_one_window_is_one(name: str, params: dict[str, Any], sym: bool) -> None:
-    assert_array_equal(get_window(name, 1, sym=sym, **params), [1.0])
+    # Exact: a window of length 1 is defined as [1.0].
+    assert_allclose(get_window(name, 1, sym=sym, **params), [1.0], rtol=0, atol=0)
 
 
 def test_rectangular_ignores_sym() -> None:
-    assert_array_equal(get_window("rectangular", 7, sym=True), get_window("rectangular", 7))
+    # Exact: both are np.ones(7).
+    assert_allclose(
+        get_window("rectangular", 7, sym=True), get_window("rectangular", 7), rtol=0, atol=0
+    )
 
 
 @pytest.mark.parametrize("sym", [True, False])
 def test_kaiser_with_beta_zero_is_rectangular(sym: bool) -> None:
-    assert_array_equal(get_window("kaiser", 9, sym=sym, beta=0.0), np.ones(9))
+    # Exact: I0(0) / I0(0) = 1 for every sample.
+    assert_allclose(get_window("kaiser", 9, sym=sym, beta=0.0), np.ones(9), rtol=0, atol=0)
 
 
 def test_numpy_integer_length_is_accepted() -> None:
@@ -101,17 +110,26 @@ def test_numpy_integer_length_is_accepted() -> None:
 
 
 def test_general_cosine_with_one_coefficient_is_constant() -> None:
-    assert_array_equal(general_cosine(8, [1.0]), np.ones(8))
+    assert_allclose(general_cosine(8, [1.0]), np.ones(8), rtol=0, atol=0)  # exact: a0 * cos(0)
 
 
 @pytest.mark.parametrize("sym", [True, False])
 def test_general_cosine_reproduces_hann(sym: bool) -> None:
-    assert_array_equal(general_cosine(33, [0.5, 0.5], sym=sym), get_window("hann", 33, sym=sym))
+    # Exact: hann calls general_cosine with the same coefficients.
+    assert_allclose(
+        general_cosine(33, [0.5, 0.5], sym=sym), get_window("hann", 33, sym=sym), rtol=0, atol=0
+    )
 
 
 @pytest.mark.parametrize("a", [[], [[0.5, 0.5]], [0.5, float("nan")], [float("inf")]])
 def test_general_cosine_rejects_bad_coefficients(a: Any) -> None:
     with pytest.raises(ValueError, match="a must"):
+        general_cosine(8, a)
+
+
+@pytest.mark.parametrize("a", [[0.5 + 1j, 0.5], [True, False], ["0.5", "0.5"]])
+def test_general_cosine_rejects_non_real_coefficients(a: Any) -> None:
+    with pytest.raises(TypeError, match="a must contain integers or floats"):
         general_cosine(8, a)
 
 
@@ -159,6 +177,20 @@ def test_helpers_accept_lists() -> None:
 @pytest.mark.parametrize("w", [[], [[1.0, 2.0]], np.float64(1.0)])
 def test_helpers_reject_non_1d_or_empty(helper: Any, w: Any) -> None:
     with pytest.raises(ValueError, match="non-empty 1-D"):
+        helper(w)
+
+
+@pytest.mark.parametrize("helper", [coherent_gain, enbw])
+@pytest.mark.parametrize("w", [[1 + 1j, 1 - 1j], [True, False], ["1", "2"]])
+def test_helpers_reject_non_real_samples(helper: Any, w: Any) -> None:
+    with pytest.raises(TypeError, match="w must contain integers or floats"):
+        helper(w)
+
+
+@pytest.mark.parametrize("helper", [coherent_gain, enbw])
+@pytest.mark.parametrize("w", [[float("nan"), 1.0], [float("inf"), 1.0]])
+def test_helpers_reject_non_finite_samples(helper: Any, w: Any) -> None:
+    with pytest.raises(ValueError, match="w must contain only finite values"):
         helper(w)
 
 
@@ -214,6 +246,22 @@ def test_unknown_parameter_raises_type_error() -> None:
 def test_invalid_beta_value_raises_value_error(beta: float) -> None:
     with pytest.raises(ValueError, match="beta must be finite and >= 0"):
         get_window("kaiser", 8, beta=beta)
+
+
+@pytest.mark.parametrize("beta", [709.79, 710.0, 1000.0, 1e6])
+def test_beta_that_overflows_i0_raises_value_error(beta: float) -> None:
+    # Above about 709.78, I0(beta) is inf in float64 and the window would be NaN and 0.
+    with pytest.raises(ValueError, match="I0"):
+        get_window("kaiser", 8, beta=beta)
+
+
+# Both cases contain the centre sample: symmetric 65, and periodic 64 (cut from symmetric 65).
+@pytest.mark.parametrize(("n", "sym"), [(65, True), (64, False)])
+def test_large_valid_beta_gives_finite_window(n: int, sym: bool) -> None:
+    w = get_window("kaiser", n, sym=sym, beta=709.0)
+    assert np.all(np.isfinite(w))
+    assert np.all(w > 0.0)
+    assert_allclose(np.max(w), 1.0, rtol=0, atol=0)  # exact at the centre: I0(beta) / I0(beta)
 
 
 @pytest.mark.parametrize("beta", ["8.6", True, None])

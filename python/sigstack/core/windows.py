@@ -70,7 +70,26 @@ def _check_beta(beta: object) -> float:
     value = float(beta)
     if not math.isfinite(value) or value < 0.0:
         raise ValueError(f"beta must be finite and >= 0, got {beta!r}")
+    with np.errstate(over="ignore"):
+        denominator_finite = bool(np.isfinite(np.i0(value)))
+    if not denominator_finite:
+        raise ValueError(
+            f"beta must be at most about 709.78 so that I0(beta) is finite in float64, got {beta!r}"
+        )
     return value
+
+
+def _as_real_vector(values: ArrayLike, name: str) -> NDArray[np.float64]:
+    """Return ``values`` as a non-empty 1-D float64 array of finite real numbers."""
+    arr = np.asarray(values)
+    if arr.dtype.kind not in "iuf":
+        raise TypeError(f"{name} must contain integers or floats, got dtype {arr.dtype}")
+    if arr.ndim != 1 or arr.size == 0:
+        raise ValueError(f"{name} must be a non-empty 1-D sequence, got shape {arr.shape}")
+    out = arr.astype(np.float64)
+    if not np.all(np.isfinite(out)):
+        raise ValueError(f"{name} must contain only finite values")
+    return out
 
 
 def _check_sym(sym: object) -> bool:
@@ -107,8 +126,9 @@ def general_cosine(n: SupportsIndex, a: ArrayLike, *, sym: bool = False) -> NDAr
        \qquad k = 0, \dots, L,
 
     with :math:`L = N - 1` for the symmetric window. The periodic window uses
-    :math:`L = N` and keeps :math:`k = 0, \dots, N-1`. Hann, Hamming, Blackman,
-    Blackman-Harris and flat-top are special cases ([Harris1978]_ sec. V).
+    :math:`L = N` and keeps :math:`k = 0, \dots, N-1`. Hann, Hamming, Blackman and
+    Blackman-Harris ([Harris1978]_ sec. V) and the flat-top window (:func:`flattop`)
+    are special cases.
 
     Parameters
     ----------
@@ -128,17 +148,14 @@ def general_cosine(n: SupportsIndex, a: ArrayLike, *, sym: bool = False) -> NDAr
     Raises
     ------
     TypeError
-        If ``n`` is not an integer or ``sym`` is not a bool.
+        If ``n`` is not an integer, ``sym`` is not a bool, or ``a`` contains
+        values that are not integers or floats.
     ValueError
         If ``n < 1`` or ``a`` is empty, not 1-D or not finite.
     """
     length = _check_length(n)
     is_sym = _check_sym(sym)
-    coeffs = np.asarray(a, dtype=np.float64)
-    if coeffs.ndim != 1 or coeffs.size == 0:
-        raise ValueError(f"a must be a non-empty 1-D sequence, got shape {coeffs.shape}")
-    if not np.all(np.isfinite(coeffs)):
-        raise ValueError("a must contain only finite values")
+    coeffs = _as_real_vector(a, "a")
     if length == 1:
         return np.ones(1)
     m = _symmetric_length(length, is_sym)
@@ -327,9 +344,8 @@ def flattop(n: SupportsIndex, *, sym: bool = False) -> NDArray[np.float64]:
     and :math:`L` as in :func:`general_cosine`.
 
     Source: G. D'Antona and A. Ferrero, *Digital Signal Processing for Measurement
-    Systems*, Springer, 2006, p. 70, doi:10.1007/0-387-28666-7. This is the variant
-    in ``scipy.signal.windows.flattop``. Harris (1978) lists a different, 3-term
-    flat-top window.
+    Systems*, Springer, 2006, p. 70, doi:10.1007/0-387-28666-7. These are the
+    coefficients of ``scipy.signal.windows.flattop``; other flat-top variants exist.
 
     Parameters
     ----------
@@ -376,7 +392,9 @@ def kaiser(n: SupportsIndex, beta: float, *, sym: bool = False) -> NDArray[np.fl
     n : int
         Window length :math:`N \ge 1`.
     beta : float
-        Shape parameter :math:`\beta \ge 0`, finite.
+        Shape parameter :math:`\beta \ge 0`. It must be small enough that
+        :math:`I_0(\beta)` is finite in ``float64``, i.e. at most about 709.78;
+        typical values are 0 to 20.
     sym : bool, default False
         ``True`` for the symmetric window, ``False`` for the periodic (DFT-even) one.
 
@@ -391,7 +409,7 @@ def kaiser(n: SupportsIndex, beta: float, *, sym: bool = False) -> NDArray[np.fl
         If ``n`` is not an integer, ``beta`` is not a real number or ``sym`` is
         not a bool.
     ValueError
-        If ``n < 1`` or ``beta`` is negative or not finite.
+        If ``n < 1`` or ``beta`` is negative, not finite or above about 709.78.
     """
     length = _check_length(n)
     is_sym = _check_sym(sym)
@@ -467,14 +485,6 @@ def get_window(
     return window(n, sym=sym, **params)
 
 
-def _as_window(w: ArrayLike) -> NDArray[np.float64]:
-    """Return ``w`` as a non-empty 1-D float64 array."""
-    arr = np.asarray(w, dtype=np.float64)
-    if arr.ndim != 1 or arr.size == 0:
-        raise ValueError(f"w must be a non-empty 1-D array, got shape {arr.shape}")
-    return arr
-
-
 def coherent_gain(w: ArrayLike) -> float:
     r"""Coherent gain of a window: the gain it applies to a tone at a bin centre.
 
@@ -487,7 +497,7 @@ def coherent_gain(w: ArrayLike) -> float:
     Parameters
     ----------
     w : array_like
-        Window samples, non-empty and 1-D.
+        Window samples: non-empty, 1-D, finite real numbers.
 
     Returns
     -------
@@ -496,10 +506,12 @@ def coherent_gain(w: ArrayLike) -> float:
 
     Raises
     ------
+    TypeError
+        If ``w`` contains values that are not integers or floats.
     ValueError
-        If ``w`` is empty or not 1-D.
+        If ``w`` is empty, not 1-D or not finite.
     """
-    arr = _as_window(w)
+    arr = _as_real_vector(w, "w")
     return float(np.sum(arr) / arr.size)
 
 
@@ -516,20 +528,22 @@ def enbw(w: ArrayLike) -> float:
     Parameters
     ----------
     w : array_like
-        Window samples, non-empty and 1-D.
+        Window samples: non-empty, 1-D, finite real numbers.
 
     Returns
     -------
     float
         ENBW in bins: 1.0 for the rectangular window, 1.5 for the periodic Hann
-        window.
+        window of length ``n > 2``.
 
     Raises
     ------
+    TypeError
+        If ``w`` contains values that are not integers or floats.
     ValueError
-        If ``w`` is empty, not 1-D, or its samples sum to zero.
+        If ``w`` is empty, not 1-D, not finite, or its samples sum to zero.
     """
-    arr = _as_window(w)
+    arr = _as_real_vector(w, "w")
     total = float(np.sum(arr))
     if total == 0.0:
         raise ValueError("ENBW is undefined: the window samples sum to zero")
