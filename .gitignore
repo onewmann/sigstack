@@ -1,0 +1,53 @@
+# Python
+__pycache__/
+*.py[cod]
+*.so
+*.pyd
+*.egg-info/
+.eggs/
+build/
+dist/
+wheels/
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.hypothesis/
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+junit*.xml
+.ipynb_checkpoints/
+
+# C++ / CMake
+_build/
+cmake-build-*/
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+compile_commands.json
+CMakeUserPresets.json
+*.o
+*.obj
+*.a
+*.lib
+*.dll
+*.exe
+
+# pixi
+.pixi/
+
+# IDE
+.vscode/
+.idea/
+.vs/
+.cache/
+*.swp
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
