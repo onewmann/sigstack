@@ -1,0 +1,32 @@
+name: Bug
+description: Something does not work as documented
+title: "[bug] "
+labels: ["type:bug"]
+body:
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Minimal code or commands, with input sizes, dtypes and seeds.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behaviour
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behaviour
+      description: Include the full error message or the numbers that differ.
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: OS, sigstack version or commit, output of `pixi list` if relevant.
+    validations:
+      required: true

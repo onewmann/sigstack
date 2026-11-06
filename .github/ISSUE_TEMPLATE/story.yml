@@ -1,0 +1,63 @@
+name: User story
+description: A backlog item from docs/ROADMAP.md, section 4
+title: "[Sx.y] "
+body:
+  - type: markdown
+    attributes:
+      value: After creating the issue, set the `type:*`, `epic:*` and `sprint:*` labels.
+  - type: input
+    id: story-id
+    attributes:
+      label: Story ID
+      description: ID from the roadmap backlog, e.g. S3.2
+      placeholder: S3.2
+    validations:
+      required: true
+  - type: textarea
+    id: story
+    attributes:
+      label: User story
+      placeholder: As a <role> I want <capability> so that <benefit>.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: Checkable conditions, one per line.
+    validations:
+      required: true
+  - type: dropdown
+    id: points
+    attributes:
+      label: Points
+      description: Fibonacci scale; split stories with 8 points before they enter a sprint.
+      options: ["1", "2", "3", "5", "8"]
+    validations:
+      required: true
+  - type: dropdown
+    id: epic
+    attributes:
+      label: Epic
+      options:
+        - E0 Project infrastructure
+        - E1 Core and block model
+        - E2 Signal generators and metrics
+        - E3 Filters
+        - E4 Spectral analysis
+        - E5 Pipeline, config, CLI
+        - E6 C++ core and bindings
+        - E7 Multirate and filter banks
+        - E8 Wavelets
+        - E9 Adaptive filters
+        - E10 Features and detection
+        - E11 Benchmarking
+        - E12 Domain examples and docs
+        - E13 RF / communications
+        - E14 Radar
+        - E15 Antenna arrays and beamforming
+        - E16 Simulation and Monte Carlo
+        - E17 Optimisation
+        - E18 Surrogates and differentiable DSP
+    validations:
+      required: true
