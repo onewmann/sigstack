@@ -1,5 +1,5 @@
 name: User story
-description: A backlog item from docs/ROADMAP.md, section 4
+description: A backlog item from docs/plan/backlog.toml
 title: "[Sx.y] "
 body:
   - type: markdown
@@ -9,7 +9,7 @@ body:
     id: story-id
     attributes:
       label: Story ID
-      description: ID from the roadmap backlog, e.g. S3.2
+      description: ID from docs/plan/backlog.toml, e.g. S3.2
       placeholder: S3.2
     validations:
       required: true
@@ -51,13 +51,14 @@ body:
         - E8 Wavelets
         - E9 Adaptive filters
         - E10 Features and detection
-        - E11 Benchmarking
-        - E12 Domain examples and docs
+        - E11 Benchmarking and cost model
+        - E12 Domain examples, docs, v1.0
         - E13 RF / communications
         - E14 Radar
         - E15 Antenna arrays and beamforming
         - E16 Simulation and Monte Carlo
         - E17 Optimisation
-        - E18 Surrogates and differentiable DSP
+        - E18 Surrogates and learned components
+        - E19 Embedded port (Cortex-M)
     validations:
       required: true

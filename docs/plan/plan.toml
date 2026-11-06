@@ -1,0 +1,263 @@
+# sigstack planning settings: calendar, velocity, actuals, release profiles.
+# Read by scripts/plan.py together with backlog.toml.
+
+[settings]
+start = "2026-11-09"          # Monday of Sprint 1
+sprint_days = 14
+default_velocity = 8          # points per full sprint until actuals exist
+planned_velocity = 8          # baseline for the "velocity off plan" trigger; /replan resets it
+velocity_window = 3           # mean of the last N sprints once actuals exist
+profile = "default"           # active profile, see [profiles.*]
+horizon_slots = 80            # how many two-week slots the scheduler may use
+pull_ahead = 1                # how many later releases may fill leftover capacity
+
+# Capacity factor per two-week slot, chosen by the slot's start date.
+# 1.0 = normal lecture period, 0 = pause, 1.5 = lecture-free time.
+# Uni Freiburg: WS 2026/27 lectures 19.10.2026-13.02.2027, Christmas break 24.12.-06.01.,
+# SS 2027 lectures 19.04.-24.07.2027. Exam windows are ASSUMPTIONS: check the ESE exam plan.
+[[period]]
+from = "2026-12-21"
+to = "2027-01-03"
+factor = 0.0
+label = "Christmas break"
+
+[[period]]
+from = "2027-02-01"
+to = "2027-02-14"
+factor = 0.5
+label = "Last lecture weeks, exam preparation"
+
+[[period]]
+from = "2027-02-15"
+to = "2027-03-14"
+factor = 0.0
+label = "Exam period (assumed)"
+
+[[period]]
+from = "2027-03-15"
+to = "2027-04-11"
+factor = 1.5
+label = "Lecture-free"
+
+[[period]]
+from = "2027-07-12"
+to = "2027-07-25"
+factor = 0.5
+label = "Last lecture weeks, exam preparation"
+
+[[period]]
+from = "2027-07-26"
+to = "2027-08-22"
+factor = 0.0
+label = "Exam period (assumed)"
+
+[[period]]
+from = "2027-08-23"
+to = "2027-10-17"
+factor = 1.5
+label = "Lecture-free"
+
+[[period]]
+from = "2027-12-20"
+to = "2028-01-02"
+factor = 0.0
+label = "Christmas break (assumed)"
+
+[[period]]
+from = "2028-01-31"
+to = "2028-02-13"
+factor = 0.5
+label = "Last lecture weeks (assumed)"
+
+[[period]]
+from = "2028-02-14"
+to = "2028-03-12"
+factor = 0.0
+label = "Exam period (assumed)"
+
+[[period]]
+from = "2028-03-13"
+to = "2028-04-16"
+factor = 1.5
+label = "Lecture-free (assumed)"
+
+# Measured velocity, one entry per finished sprint (added by /sprint-review).
+# [[actual]]
+# sprint = 1
+# done_points = 8
+# note = ""
+
+# ------------------------------------------------------------------ profiles
+# A profile maps groups (backlog.toml) to releases, in order. Keep a release at or below
+# about three sprints of points; plan.py warns above that.
+# "default":  breadth first, general modules, then radar/RF (order of ROADMAP section 5).
+# "showcase": FMCW radar showcase first (simulate -> verify -> optimise -> embedded),
+#             breadth afterwards. Same stories, different order.
+
+[profiles.default]
+description = "Breadth first: general modules, then radar/RF"
+
+[[profiles.default.release]]
+version = "v0.1.0"
+title = "Core block model"
+groups = ["foundation"]
+
+[[profiles.default.release]]
+version = "v0.2.0"
+title = "Signals, metrics, filters, docs site"
+groups = ["signals-docs", "filters"]
+cv = "first version worth linking"
+
+[[profiles.default.release]]
+version = "v0.3.0"
+title = "Spectral analysis, pipeline, YAML, CLI"
+groups = ["spectral", "pipeline"]
+
+[[profiles.default.release]]
+version = "v0.4.0"
+title = "First C++ kernels, basic detectors"
+groups = ["cpp-core", "detection-basic"]
+
+[[profiles.default.release]]
+version = "v0.5.0"
+title = "Monte Carlo verification"
+groups = ["mc"]
+
+[[profiles.default.release]]
+version = "v0.6.0"
+title = "Multirate, features"
+groups = ["multirate", "features"]
+
+[[profiles.default.release]]
+version = "v0.7.0"
+title = "C++ fast path, benchmarks, wavelets"
+groups = ["cpp-fastpath", "wavelets"]
+
+[[profiles.default.release]]
+version = "v0.8.0"
+title = "Optimisation"
+groups = ["optim"]
+cv = "simulate-verify-optimise loop complete"
+
+[[profiles.default.release]]
+version = "v0.9.0"
+title = "Radar chain"
+groups = ["radar-core"]
+
+[[profiles.default.release]]
+version = "v0.10.0"
+title = "Radar target list, C++ radar kernels, radar showcase"
+groups = ["radar-ext", "showcase-radar-opt"]
+cv = "radar showcase: simulate-verify-optimise"
+
+[[profiles.default.release]]
+version = "v0.11.0"
+title = "RF/communications"
+groups = ["rf"]
+
+[[profiles.default.release]]
+version = "v0.12.0"
+title = "Arrays, adaptive filters"
+groups = ["arrays", "adaptive"]
+
+[[profiles.default.release]]
+version = "v0.13.0"
+title = "Surrogates, differentiable DSP"
+groups = ["surrogates"]
+
+[[profiles.default.release]]
+version = "v1.0.0"
+title = "API freeze, domain examples, docs"
+groups = ["polish"]
+
+[[profiles.default.release]]
+version = "v1.1.0"
+title = "Embedded port"
+groups = ["embedded"]
+cv = "radar chain on Cortex-M"
+
+[[profiles.default.release]]
+version = "post-1.1"
+title = "Learned components"
+groups = ["learned"]
+
+[profiles.showcase]
+description = "Showcase first: FMCW radar simulate, verify, optimise, embedded; breadth afterwards"
+
+[[profiles.showcase.release]]
+version = "v0.1.0"
+title = "Core block model"
+groups = ["foundation"]
+
+[[profiles.showcase.release]]
+version = "v0.2.0"
+title = "Signals, metrics, filters, docs site"
+groups = ["signals-docs", "filters"]
+cv = "first version worth linking"
+
+[[profiles.showcase.release]]
+version = "v0.3.0"
+title = "Spectral analysis, pipeline, YAML, CLI"
+groups = ["spectral", "pipeline"]
+
+[[profiles.showcase.release]]
+version = "v0.4.0"
+title = "FMCW radar chain"
+groups = ["detection-basic", "radar-core"]
+
+[[profiles.showcase.release]]
+version = "v0.5.0"
+title = "Monte Carlo verification"
+groups = ["mc"]
+
+[[profiles.showcase.release]]
+version = "v0.6.0"
+title = "First C++ kernels, radar target list, C++ radar kernels"
+groups = ["cpp-core", "radar-ext"]
+
+[[profiles.showcase.release]]
+version = "v0.7.0"
+title = "Optimisation, radar showcase"
+groups = ["optim", "showcase-radar-opt"]
+cv = "radar showcase: simulate-verify-optimise"
+
+[[profiles.showcase.release]]
+version = "v0.8.0"
+title = "C++ fast path, benchmarks"
+groups = ["cpp-fastpath"]
+
+[[profiles.showcase.release]]
+version = "v0.9.0"
+title = "Embedded port"
+groups = ["embedded"]
+cv = "radar chain on Cortex-M"
+
+[[profiles.showcase.release]]
+version = "v0.10.0"
+title = "Multirate, features"
+groups = ["multirate", "features"]
+
+[[profiles.showcase.release]]
+version = "v0.11.0"
+title = "RF/communications"
+groups = ["rf"]
+
+[[profiles.showcase.release]]
+version = "v0.12.0"
+title = "Arrays, wavelets"
+groups = ["arrays", "wavelets"]
+
+[[profiles.showcase.release]]
+version = "v0.13.0"
+title = "Adaptive filters, surrogates, differentiable DSP"
+groups = ["adaptive", "surrogates"]
+
+[[profiles.showcase.release]]
+version = "v1.0.0"
+title = "API freeze, domain examples, docs"
+groups = ["polish"]
+
+[[profiles.showcase.release]]
+version = "post-1.0"
+title = "Learned components"
+groups = ["learned"]
