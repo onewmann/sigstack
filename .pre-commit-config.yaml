@@ -1,0 +1,36 @@
+# Install the git hook with: pixi run pre-commit install
+# ruff and mypy run through pixi, so hooks, `pixi run check` and CI use the same tool versions.
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+        args: [--markdown-linebreak-ext=md]
+      - id: check-yaml
+      - id: check-toml
+      - id: check-added-large-files
+        args: [--maxkb=500]
+
+  - repo: local
+    hooks:
+      - id: ruff-check
+        name: ruff check
+        entry: pixi run ruff check --fix --force-exclude
+        language: system
+        types_or: [python, pyi, jupyter]
+        require_serial: true
+      - id: ruff-format
+        name: ruff format
+        entry: pixi run ruff format --force-exclude
+        language: system
+        # ruff also formats Python blocks in Markdown, as `pixi run lint` checks them.
+        types_or: [python, pyi, jupyter, markdown]
+        require_serial: true
+      - id: mypy
+        name: mypy
+        entry: pixi run mypy
+        language: system
+        types_or: [python, pyi]
+        pass_filenames: false
+        require_serial: true

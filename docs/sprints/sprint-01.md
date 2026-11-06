@@ -271,7 +271,7 @@ Then in the browser: create a Project (board) "sigstack", add fields *Points* (n
 
 ### Review notes
 
-- Done points: 
+- Done points:
 - Not done:
 
 ### Retro

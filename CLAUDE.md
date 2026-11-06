@@ -31,7 +31,7 @@ All tooling runs through pixi.
 | `pixi install` | create / update environment |
 | `pixi run test` | pytest |
 | `pixi run lint` | ruff check + ruff format --check |
-| `pixi run fmt` | ruff format + ruff check --fix |
+| `pixi run fmt` | ruff check --fix, then ruff format |
 | `pixi run typecheck` | mypy |
 | `pixi run check` | lint + typecheck + test (run before every commit) |
 
