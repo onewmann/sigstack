@@ -116,13 +116,15 @@ def test_invalid_rate_type_raises_type_error(fs: Any) -> None:
 def test_gain_properties() -> None:
     gain = Gain(-0.5, fs=48_000)
     assert gain.gain == -0.5
+    assert Gain(0.1, fs=FS).gain == 0.1  # stored in double precision, not rounded
     assert gain.fs_in == gain.fs_out == 48_000.0
     assert gain.latency == 0
     assert repr(gain) == "Gain(gain=-0.5, fs=48000.0)"
 
 
 @pytest.mark.parametrize("shape", [(16,), (3, 16), (2, 3, 16)])
-@pytest.mark.parametrize("g", [2.5, -1.0 + 0.5j])
+# 0.1 and 1/3 + 0.2j are not exact in float32, so a gain rounded to single precision fails.
+@pytest.mark.parametrize("g", [2.5, 0.1, -1.0 + 0.5j, 1 / 3 + 0.2j])
 @pytest.mark.parametrize("complex_input", [False, True])
 def test_gain_values_and_shapes(shape: tuple[int, ...], g: complex, complex_input: bool) -> None:
     rng = np.random.default_rng(1)
@@ -131,8 +133,9 @@ def test_gain_values_and_shapes(shape: tuple[int, ...], g: complex, complex_inpu
         x = x + 1j * rng.standard_normal(shape)
     y = Gain(g, fs=FS).process(x)
     assert y.shape == x.shape
-    # One float64/complex128 multiplication per element, the same as the reference.
-    assert_allclose(y, g * x, rtol=0, atol=0)
+    # Same single multiply in float64/complex128 and the same operand order as the block
+    # (complex multiplication is not bitwise commutative), so the result is exact.
+    assert_allclose(y, x * g, rtol=0, atol=0)
 
 
 @pytest.mark.parametrize(

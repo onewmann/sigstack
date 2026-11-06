@@ -15,7 +15,8 @@ Unless a block documents otherwise:
   object and date/time arrays are rejected.
 - Floating and complex input keeps its precision: ``float32`` stays ``float32``
   (or becomes ``complex64`` if the block produces complex output), ``float64``
-  stays ``float64`` (or becomes ``complex128``).
+  stays ``float64`` (or becomes ``complex128``). Other floating and complex
+  dtypes (``float16``, ``longdouble``, ``clongdouble``) keep their precision too.
 - Complex input gives complex output.
 """
 
@@ -235,6 +236,10 @@ class Gain(BaseBlock):
     ``complex64``       ``complex64``   ``complex64``
     ``complex128``      ``complex128``  ``complex128``
     ==================  ==============  ==============
+
+    The gain is rounded to the input precision as well, so a gain outside the
+    range of that dtype (e.g. above about ``3.4e38`` for ``float32``) overflows
+    to inf with a ``RuntimeWarning``.
 
     A gain is the simplest memoryless, linear, time-invariant system
     (Oppenheim and Schafer, *Discrete-Time Signal Processing*, 3rd ed., sec. 2.2).
