@@ -4,7 +4,7 @@
 
 **Active profile:** `default`: Breadth first: general modules, then radar/RF  
 **Velocity used:** 8.0 points per full sprint (mean of sprints 1, normalised to a full sprint)  
-**Backlog:** 95 stories, 278 points; done 8, committed 0, open 270  
+**Backlog:** 95 stories, 278 points; done 8, committed 8, open 262  
 **Forecast v1.0.0:** 23.04.2028 (sprint 31)
 
 Forecasts assume the velocity above. They move with every sprint review.

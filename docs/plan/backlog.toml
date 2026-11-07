@@ -148,7 +148,8 @@ story = "As a developer I want complex dtypes and multichannel arrays (channels 
 ac = ["A block with SUPPORTS_COMPLEX = False (BaseBlock default True) raises TypeError from process() on complex input, naming the block class", "Contract test over dtypes bool, int16, float32, float64, complex64, complex128 x shapes (0,), (1,), (17,), (1, 17), (3, 17), (2, 3, 17), (3, 0) x real and complex Gain: shape, dtype and values as documented", "BaseBlock.output_shape(input_shape) returns the output shape, default unchanged; tested for Gain", "docs/conventions.md states array layout, empty chunks, the precision rule and shape-changing blocks (D-017) and SUPPORTS_COMPLEX; block.py docstrings link to it"]
 points = 1
 deps = ["S1.1"]
-status = "todo"
+status = "committed"
+sprint = 2
 notes = "Refined 07.11.2026: Sprint 1 (PR #19, #21) already delivered layout, empty chunks, int/bool to float64, precision rules and the Gain dtype tests."
 
 [[story]]
@@ -160,7 +161,8 @@ story = "As a developer I want every block to declare its name and typed paramet
 ac = ["Explicit @register adds a concrete BaseBlock subclass to a Registry under a unique NAME; duplicate names raise; get() of an unknown name raises ValueError listing the known names; test-only blocks never enter the default registry", "For every registered block b, type(b).from_params(b.params(), fs=b.fs_in) gives equal params() and fs_in; params() returns plain Python scalars and excludes fs", "Param declares kind, default or REQUIRED, bounds and choices; construction enforces them with TypeError or ValueError, including bool for numeric kinds"]
 points = 3
 deps = ["S1.1"]
-status = "todo"
+status = "committed"
+sprint = 2
 notes = "Refined 07.11.2026, design defaults in D-018. Scalar parameters only; array parameters come with S3.3, search ranges with S17.1."
 
 [[story]]
@@ -172,7 +174,8 @@ story = "As a developer I want an automatic chunking test so that every stateful
 ac = ["Hypothesis-based test runs for every registered block", "Random chunk sizes including 0 and 1, plus fixed cases: empty first and last chunk, all chunks of length 1, one chunk, signal shorter than the latency", "Real, complex and multichannel input with shapes (N,), (3, N), (2, 3, N)", "Delay(n, *, fs): y[k] = x[k-n] with zeros before, latency n, state copied, shape and dtype fixed by the first chunk after reset(); a broken test block makes the property fail"]
 points = 3
 deps = ["S1.4", "S1.5"]
-status = "todo"
+status = "committed"
+sprint = 2
 
 [[story]]
 id = "S0.4"
@@ -239,7 +242,8 @@ story = "As a reviewer I want to open sigstack in GitHub Codespaces, so that I c
 ac = ["A Codespace on the branch builds from .devcontainer/devcontainer.json with no manual step and `pixi run check` passes in it", "pixi pinned to the CI version, `pixi install --locked`, environment in a container volume so the host .pixi/ is untouched", "README has an Open in GitHub Codespaces link"]
 points = 1
 deps = ["S0.1"]
-status = "todo"
+status = "committed"
+sprint = 2
 notes = "Refined 07.11.2026 (D-019): local Podman and Flatpak VS Code support split out as S0.9."
 
 [[story]]
