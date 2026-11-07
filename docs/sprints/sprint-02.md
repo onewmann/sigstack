@@ -6,7 +6,7 @@
 
 | ID | Task | Story | Who | Est. | Status |
 |---|---|---|---|---|---|
-| T1 | Block contract: complex opt-out, output shape, conventions | S1.4 | Claude Code | 1 h | [ ] |
+| T1 | Block contract: complex opt-out, output shape, conventions | S1.4 | Claude Code | 1 h | [x] |
 | T2 | Block registry and parameter metadata | S1.5 | Claude Code (design first) | 3.5 h | [ ] |
 | T3 | Generic chunking test, `Delay` block | S1.2 | Claude Code | 3.5 h | [ ] |
 | T4 | Devcontainer for GitHub Codespaces | S0.6 | Claude Code + Oli (opens the Codespace) | 1 h | [ ] |
@@ -208,3 +208,4 @@ Run `/refine 3` at the end of week 1. Sprint 3 holds S0.4 (docs site), S2.1 (tes
 | Date | Task | Time | Note |
 |---|---|---|---|
 | 07.11.2026 | — | | `/plan-sprint 2` with Oli: goal and stories S1.4, S1.5, S1.2, S0.6 committed (8 points); issues #7, #8, #13, #14 updated from the backlog (#14 to milestone v0.2.0) |
+| 07.11.2026 | T1 | | `SUPPORTS_COMPLEX`, `output_shape()`, `docs/conventions.md`, contract test matrix (dtype x shape x gain) |

@@ -126,47 +126,6 @@ def test_gain_properties() -> None:
     assert repr(gain) == "Gain(gain=-0.5, fs=48000.0)"
 
 
-@pytest.mark.parametrize("shape", [(16,), (3, 16), (2, 3, 16)])
-# 0.1 and 1/3 + 0.2j are not exact in float32, so a gain rounded to single precision fails.
-@pytest.mark.parametrize("g", [2.5, 0.1, -1.0 + 0.5j, 1 / 3 + 0.2j])
-@pytest.mark.parametrize("complex_input", [False, True])
-def test_gain_values_and_shapes(shape: tuple[int, ...], g: complex, complex_input: bool) -> None:
-    rng = np.random.default_rng(1)
-    x = rng.standard_normal(shape)
-    if complex_input:
-        x = x + 1j * rng.standard_normal(shape)
-    y = Gain(g, fs=FS).process(x)
-    assert y.shape == x.shape
-    # Same single multiply in float64/complex128 and the same operand order as the block
-    # (complex multiplication is not bitwise commutative), so the result is exact.
-    assert_allclose(y, x * g, rtol=0, atol=0)
-
-
-@pytest.mark.parametrize(
-    ("in_dtype", "g", "out_dtype"),
-    [
-        (np.int16, 2.0, np.float64),
-        (np.int64, 2.0, np.float64),
-        (np.uint8, 2.0, np.float64),
-        (np.float32, 2.0, np.float32),
-        (np.float64, 2.0, np.float64),
-        (np.complex64, 2.0, np.complex64),
-        (np.complex128, 2.0, np.complex128),
-        (np.int16, 1j, np.complex128),
-        (np.float32, 1j, np.complex64),
-        (np.float64, 1j, np.complex128),
-        (np.complex64, 1j, np.complex64),
-        (np.complex128, 1j, np.complex128),
-    ],
-)
-def test_gain_dtype_rules(in_dtype: type, g: complex, out_dtype: type) -> None:
-    x: NDArray[Any] = np.arange(8).astype(in_dtype)
-    y = Gain(g, fs=FS).process(x)
-    assert y.dtype == out_dtype
-    # Small integers times 2 or 1j are exact in every float format.
-    assert_allclose(y, g * np.arange(8), rtol=0, atol=0)
-
-
 @pytest.mark.parametrize(
     ("g", "out_dtype"),
     [(np.float64(2.0), np.float32), (np.complex128(1j), np.complex64), (3, np.float32)],
