@@ -2,7 +2,7 @@
 # Read by scripts/plan.py together with backlog.toml.
 
 [settings]
-start = "2026-11-09"          # Monday of Sprint 1
+start = "2026-10-26"          # Monday of Sprint 1 (moved from 09.11.2026, D-020)
 sprint_days = 14
 default_velocity = 8          # points per full sprint until actuals exist
 planned_velocity = 8          # baseline for the "velocity off plan" trigger; /replan resets it
@@ -86,6 +86,11 @@ label = "Lecture-free (assumed)"
 # sprint = 1
 # done_points = 8
 # note = ""
+
+[[actual]]
+sprint = 1
+done_points = 8
+note = "All five stories done on 06.-07.11.2026, before the planned start; Oli spent 4-8 h. Calendar moved two weeks earlier (D-020)."
 
 # ------------------------------------------------------------------ profiles
 # A profile maps groups (backlog.toml) to releases, in order. Keep a release at or below
