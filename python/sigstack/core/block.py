@@ -12,7 +12,7 @@ Dtype rules
 Unless a block documents otherwise:
 
 - Boolean and integer input is converted to ``float64`` before processing
-  (``True`` becomes 1.0), as NumPy and SciPy do in arithmetic. String, object
+  (``True`` becomes 1.0). String, object
   and date/time arrays are rejected. Scalar parameters such as ``fs`` stay
   strict: ``True`` is not accepted as a number.
 - Floating and complex input keeps its precision: ``float32`` stays ``float32``
@@ -194,7 +194,8 @@ class BaseBlock(ABC):
         ValueError
             If ``x`` is a scalar (0-d).
         TypeError
-            If ``x`` has a string, object, date/time or other non-numeric dtype.
+            If ``x`` does not have a boolean, integer, floating or complex dtype
+            (for example string, object or date/time).
         """
         return self._process(_as_signal(x))
 

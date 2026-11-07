@@ -127,9 +127,26 @@ def test_general_cosine_rejects_bad_coefficients(a: Any) -> None:
         general_cosine(8, a)
 
 
+@pytest.mark.parametrize("sym", [True, False])
+def test_general_cosine_accepts_boolean_coefficients(sym: bool) -> None:
+    # Exact: bool coefficients count as 0 and 1, as for block input and the window helpers.
+    assert_allclose(
+        general_cosine(8, [True, True], sym=sym),
+        general_cosine(8, [1.0, 1.0], sym=sym),
+        rtol=0,
+        atol=0,
+    )
+    assert_allclose(
+        general_cosine(8, [True, 0.5], sym=sym),
+        general_cosine(8, [1.0, 0.5], sym=sym),
+        rtol=0,
+        atol=0,
+    )
+
+
 @pytest.mark.parametrize("a", [[0.5 + 1j, 0.5], ["0.5", "0.5"]])
 def test_general_cosine_rejects_non_real_coefficients(a: Any) -> None:
-    with pytest.raises(TypeError, match="a must contain real numbers"):
+    with pytest.raises(TypeError, match="a must have a boolean, integer or floating dtype"):
         general_cosine(8, a)
 
 
@@ -183,7 +200,7 @@ def test_helpers_reject_non_1d_or_empty(helper: Any, w: Any) -> None:
 @pytest.mark.parametrize("helper", [coherent_gain, enbw])
 @pytest.mark.parametrize("w", [[1 + 1j, 1 - 1j], ["1", "2"]])
 def test_helpers_reject_non_real_samples(helper: Any, w: Any) -> None:
-    with pytest.raises(TypeError, match="w must contain real numbers"):
+    with pytest.raises(TypeError, match="w must have a boolean, integer or floating dtype"):
         helper(w)
 
 
@@ -215,7 +232,7 @@ def test_length_below_one_raises_value_error(name: str, params: dict[str, Any], 
         get_window(name, n, **params)
 
 
-@pytest.mark.parametrize("n", [2.5, 8.0, "8", None, True])
+@pytest.mark.parametrize("n", [2.5, 8.0, "8", None, True, np.bool_(True)])
 def test_non_integer_length_raises_type_error(n: Any) -> None:
     with pytest.raises(TypeError, match="n must be an integer"):
         get_window("hann", n)
@@ -270,7 +287,7 @@ def test_large_valid_beta_gives_finite_window(n: int, sym: bool) -> None:
     assert_allclose(np.max(w), 1.0, rtol=0, atol=0)  # exact at the centre: I0(beta) / I0(beta)
 
 
-@pytest.mark.parametrize("beta", ["8.6", True, None])
+@pytest.mark.parametrize("beta", ["8.6", True, np.bool_(True), None])
 def test_invalid_beta_type_raises_type_error(beta: Any) -> None:
     with pytest.raises(TypeError, match="beta must be a real number"):
         get_window("kaiser", 8, beta=beta)

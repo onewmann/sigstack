@@ -109,6 +109,9 @@ def test_invalid_rate_value_raises_value_error(fs: Any) -> None:
 def test_invalid_rate_type_raises_type_error(fs: Any) -> None:
     with pytest.raises(TypeError, match="fs must be a real number"):
         _Recorder(fs=fs)
+    if fs is not None:  # fs_out=None is the default: same rate as fs
+        with pytest.raises(TypeError, match="fs_out must be a real number"):
+            _Recorder(fs=FS, fs_out=fs)
 
 
 # --- Gain: values, shapes, dtypes ---------------------------------------------------
@@ -258,7 +261,7 @@ def test_non_finite_gain_raises_value_error(g: Any) -> None:
         Gain(g, fs=FS)
 
 
-@pytest.mark.parametrize("g", ["2", None, True, [1.0]])
+@pytest.mark.parametrize("g", ["2", None, True, np.bool_(True), [1.0]])
 def test_non_numeric_gain_raises_type_error(g: Any) -> None:
     with pytest.raises(TypeError, match="gain must be a real or complex number"):
         Gain(g, fs=FS)
