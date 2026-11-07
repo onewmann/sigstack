@@ -12,8 +12,8 @@
 | T3 | Linting, formatting, type checking, pre-commit | S0.5 | Claude Code | 1 h | [x] |
 | T4 | GitHub Actions CI (Ubuntu + Windows) | S0.2 | Claude Code | 1.5 h | [x] |
 | T5 | GitHub hygiene: templates, CONTRIBUTING, branch protection | S0.2 | Claude Code + Oli | 0.5 h | [x] |
-| T6 | `Block` protocol and `Gain` block | S1.1 | Claude Code | 2 h | [ ] |
-| T7 | Window functions | S1.3 | Claude Code | 1.5 h | [ ] |
+| T6 | `Block` protocol and `Gain` block | S1.1 | Claude Code | 2 h | [x] |
+| T7 | Window functions | S1.3 | Claude Code | 1.5 h | [x] |
 | T8 | Backlog on GitHub (labels, milestones, issues, board) | infra | Oli (`sync_issues.py`) | 1 h | [ ] |
 | T9 | `/sprint-review 1`, retro, tag `v0.0.1`, `/plan-sprint 2` | — | Oli + Claude Code | 0.5 h | [ ] |
 
@@ -297,3 +297,5 @@ Then in the browser: create a Project (board) "sigstack", add fields *Points* (n
 | 06.11.2026 | T4, T5 | | Branches ready and reviewed; push blocked: the gh token lacks the `workflow` scope (`gh auth refresh -h github.com -s workflow`) |
 | 06.11.2026 | T4 | | PR #15 merged after green CI on both OS; a deliberately failing test turned CI red (run 42278663709), its revert green again |
 | 06.11.2026 | T5 | | PR #16 merged, closes #2; branch protection on `main` applied (both checks required, pinned to GitHub Actions, admins included, linear history); issue forms render without errors on GitHub |
+| 07.11.2026 | T6 | | Design approved ("carry on"); PR #19 merged, closes #4; independent review found float32-exact test gains, fixed. Bool input decided (D-016), follow-up #21 |
+| 07.11.2026 | T7 | | PR #20 merged, closes #5; agrees with SciPy to 2e-14; Kaiser rejects beta where I0 overflows; flat-top from D'Antona and Ferrero instead of Harris |
