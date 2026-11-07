@@ -80,6 +80,7 @@ def test_base_block_rates() -> None:
     [
         (np.arange(4, dtype=np.int16), np.float64),
         (np.arange(4, dtype=np.uint8), np.float64),
+        (np.array([True, False]), np.float64),
         ([1, 2, 3], np.float64),
         (np.ones(4, dtype=np.float32), np.float32),
         (np.ones(4, dtype=np.complex64), np.complex64),
@@ -108,6 +109,9 @@ def test_invalid_rate_value_raises_value_error(fs: Any) -> None:
 def test_invalid_rate_type_raises_type_error(fs: Any) -> None:
     with pytest.raises(TypeError, match="fs must be a real number"):
         _Recorder(fs=fs)
+    if fs is not None:  # fs_out=None is the default: same rate as fs
+        with pytest.raises(TypeError, match="fs_out must be a real number"):
+            _Recorder(fs=FS, fs_out=fs)
 
 
 # --- Gain: values, shapes, dtypes ---------------------------------------------------
@@ -172,6 +176,16 @@ def test_numpy_and_int_gains_keep_input_precision(g: Any, out_dtype: type) -> No
     assert y.dtype == out_dtype
 
 
+@pytest.mark.parametrize(("g", "out_dtype"), [(2.5, np.float64), (1j, np.complex128)])
+def test_gain_converts_bool_input_to_float(g: complex, out_dtype: type) -> None:
+    # A bit stream as a bool array: True counts as 1.0, as in NumPy arithmetic.
+    y = Gain(g, fs=FS).process(np.array([[True, False, True], [False, False, True]]))
+    assert y.dtype == out_dtype
+    assert_allclose(
+        y, g * np.array([[1.0, 0.0, 1.0], [0.0, 0.0, 1.0]]), rtol=0, atol=0
+    )  # exact: g * 1, g * 0
+
+
 def test_gain_accepts_lists() -> None:
     y = Gain(2.0, fs=FS).process([1, 2, 3])
     assert y.dtype == np.float64
@@ -231,14 +245,13 @@ def test_scalar_input_raises_value_error(x: Any) -> None:
 @pytest.mark.parametrize(
     "x",
     [
-        np.array([True, False]),
         np.array(["a", "b"]),
         np.array([object(), object()]),
         np.array(["2026-11-06"], dtype="datetime64[D]"),
     ],
 )
 def test_non_numeric_input_raises_type_error(x: Any) -> None:
-    with pytest.raises(TypeError, match="integer, floating or complex array"):
+    with pytest.raises(TypeError, match="boolean, integer, floating or complex array"):
         Gain(1.0, fs=FS).process(x)
 
 
@@ -248,7 +261,7 @@ def test_non_finite_gain_raises_value_error(g: Any) -> None:
         Gain(g, fs=FS)
 
 
-@pytest.mark.parametrize("g", ["2", None, True, [1.0]])
+@pytest.mark.parametrize("g", ["2", None, True, np.bool_(True), [1.0]])
 def test_non_numeric_gain_raises_type_error(g: Any) -> None:
     with pytest.raises(TypeError, match="gain must be a real or complex number"):
         Gain(g, fs=FS)

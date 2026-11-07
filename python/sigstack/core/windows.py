@@ -80,10 +80,13 @@ def _check_beta(beta: object) -> float:
 
 
 def _as_real_vector(values: ArrayLike, name: str) -> NDArray[np.float64]:
-    """Return ``values`` as a non-empty 1-D float64 array of finite real numbers."""
+    """Return ``values`` as a non-empty 1-D float64 array of finite real numbers.
+
+    Booleans and integers are converted to ``float64``, as for block input.
+    """
     arr = np.asarray(values)
-    if arr.dtype.kind not in "iuf":
-        raise TypeError(f"{name} must contain integers or floats, got dtype {arr.dtype}")
+    if arr.dtype.kind not in "biuf":
+        raise TypeError(f"{name} must have a boolean, integer or floating dtype, got {arr.dtype}")
     if arr.ndim != 1 or arr.size == 0:
         raise ValueError(f"{name} must be a non-empty 1-D sequence, got shape {arr.shape}")
     out = arr.astype(np.float64)
@@ -148,8 +151,8 @@ def general_cosine(n: SupportsIndex, a: ArrayLike, *, sym: bool = False) -> NDAr
     Raises
     ------
     TypeError
-        If ``n`` is not an integer, ``sym`` is not a bool, or ``a`` contains
-        values that are not integers or floats.
+        If ``n`` is not an integer, ``sym`` is not a bool, or ``a`` does not have a
+        boolean, integer or floating dtype (for example complex, string or object).
     ValueError
         If ``n < 1`` or ``a`` is empty, not 1-D or not finite.
     """
@@ -497,7 +500,8 @@ def coherent_gain(w: ArrayLike) -> float:
     Parameters
     ----------
     w : array_like
-        Window samples: non-empty, 1-D, finite real numbers.
+        Window samples: non-empty, 1-D, finite real numbers. Booleans count as
+        0 and 1, so a boolean gate is a valid window.
 
     Returns
     -------
@@ -507,7 +511,8 @@ def coherent_gain(w: ArrayLike) -> float:
     Raises
     ------
     TypeError
-        If ``w`` contains values that are not integers or floats.
+        If ``w`` does not have a boolean, integer or floating dtype (for example
+        complex, string or object).
     ValueError
         If ``w`` is empty, not 1-D or not finite.
     """
@@ -528,7 +533,8 @@ def enbw(w: ArrayLike) -> float:
     Parameters
     ----------
     w : array_like
-        Window samples: non-empty, 1-D, finite real numbers.
+        Window samples: non-empty, 1-D, finite real numbers. Booleans count as
+        0 and 1, so a boolean gate is a valid window.
 
     Returns
     -------
@@ -539,7 +545,8 @@ def enbw(w: ArrayLike) -> float:
     Raises
     ------
     TypeError
-        If ``w`` contains values that are not integers or floats.
+        If ``w`` does not have a boolean, integer or floating dtype (for example
+        complex, string or object).
     ValueError
         If ``w`` is empty, not 1-D, not finite, or its samples sum to zero.
     """
