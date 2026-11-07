@@ -66,6 +66,11 @@ mypy_path = "python"
 strict = true
 warn_unreachable = true
 
+# SciPy ships no type stubs; it is only used as a test reference.
+[[tool.mypy.overrides]]
+module = ["scipy", "scipy.*"]
+ignore_missing_imports = true
+
 # Tests may leave helpers and fixtures unannotated.
 [[tool.mypy.overrides]]
 module = ["tests", "tests.*"]
