@@ -6,26 +6,26 @@
 
 | ID | Title | Story | Acceptance criteria | Pts | Deps | Release | Status | Sprint |
 |---|---|---|---|---|---|---|---|---|
-| S0.1 | pixi environment | As a developer I want a pixi environment so that the setup runs with one command on Fedora and Windows. | `pixi install && pixi run check` works on Fedora and Windows | 2 | — | v0.1.0 | committed | 1 |
-| S0.2 | CI on every push and PR | As a developer I want CI on every push so that broken code never reaches main. | Lint, typecheck and tests run on Ubuntu and Windows<br>Required status check for merging into main | 2 | S0.1 | v0.1.0 | committed | 1 |
-| S0.5 | pre-commit hooks | As a developer I want pre-commit hooks so that style is consistent. | ruff, ruff-format, mypy active<br>`pre-commit run --all-files` passes | 1 | S0.1 | v0.1.0 | committed | 1 |
+| S0.1 | pixi environment | As a developer I want a pixi environment so that the setup runs with one command on Fedora and Windows. | `pixi install && pixi run check` works on Fedora and Windows | 2 | — | v0.1.0 | done | 1 |
+| S0.2 | CI on every push and PR | As a developer I want CI on every push so that broken code never reaches main. | Lint, typecheck and tests run on Ubuntu and Windows<br>Required status check for merging into main | 2 | S0.1 | v0.1.0 | done | 1 |
+| S0.5 | pre-commit hooks | As a developer I want pre-commit hooks so that style is consistent. | ruff, ruff-format, mypy active<br>`pre-commit run --all-files` passes | 1 | S0.1 | v0.1.0 | done | 1 |
 | S0.4 | Documentation site | As a reader I want a docs site so that I can learn the API. | MkDocs Material with MathJax and mkdocstrings<br>Auto-deploy to GitHub Pages from main<br>API pages for core<br>*Note: Moved forward from Sprint 5 so the Definition of Done item 'appears in the docs' holds from v0.1.* | 2 | S0.2 | v0.2.0 | todo | 3 |
 | S0.7 | Release automation | As a maintainer I want a tag to produce a GitHub release, so that every version is documented without manual steps. | Pushing a tag vX.Y.Z builds sdist and wheel and creates a GitHub release<br>Release notes taken from CHANGELOG | 2 | S0.2 | v0.2.0 | todo | 4 |
 | S0.6 | Devcontainer (Codespaces) | As a reviewer I want to open sigstack in GitHub Codespaces, so that I can run the checks without installing anything locally. | A Codespace on the branch builds from .devcontainer/devcontainer.json with no manual step and `pixi run check` passes in it<br>pixi pinned to the CI version, `pixi install --locked`, environment in a container volume so the host .pixi/ is untouched<br>README has an Open in GitHub Codespaces link<br>*Note: Refined 07.11.2026 (D-019): local Podman and Flatpak VS Code support split out as S0.9.* | 1 | S0.1 | v0.2.0 | todo | 2 |
 | S0.9 | Local devcontainer (Podman, Flatpak VS Code) | As the maintainer I want the devcontainer to work locally with rootless Podman and Flatpak VS Code on Fedora, so that I can develop in the container without Docker. | Flatpak VS Code opens the repo in the devcontainer through rootless Podman (host wrapper via flatpak-spawn) with no manual step inside the container<br>`pixi run check` passes in the local container; files written in the container belong to the host user and the SELinux label allows the bind mount<br>Setup steps documented in CONTRIBUTING<br>*Note: Split from S0.6 on 07.11.2026 (D-019).* | 1 | S0.6 | v0.2.0 | todo | 4 |
 | S0.3 | scikit-build-core build | As a user I want pip install . to build the package including the C++ part. | Build backend switched from hatchling to scikit-build-core<br>Wheel installs in a clean environment on Linux and Windows<br>*Note: Moved from Sprint 2: not needed before C++ code exists.* | 3 | S0.2 | v0.4.0 | todo | 8 |
-| S0.8 | Publish to TestPyPI | As a user I want to install sigstack from a package index. | Trusted publishing to TestPyPI on tag<br>Install works in a clean env | 2 | S0.7, S0.3 | v0.8.0 | todo | 19 |
+| S0.8 | Publish to TestPyPI | As a user I want to install sigstack from a package index. | Trusted publishing to TestPyPI on tag<br>Install works in a clean env | 2 | S0.7, S0.3 | v0.8.0 | todo | 17 |
 
 ## E1 Core and block model
 
 | ID | Title | Story | Acceptance criteria | Pts | Deps | Release | Status | Sprint |
 |---|---|---|---|---|---|---|---|---|
-| S1.1 | Block interface | As a user I want a common Block interface so that all steps are interchangeable. | Protocol defined and documented, contract includes chunk invariance<br>Used by a Gain block with tests | 2 | S0.1 | v0.1.0 | committed | 1 |
-| S1.3 | Window functions | As a user I want standard windows (Hann, Hamming, Blackman, Blackman-Harris, Kaiser, flat-top). | Match scipy.signal.get_window to 1e-12<br>Coherent gain and ENBW helpers | 1 | S0.1 | v0.1.0 | committed | 1 |
+| S1.1 | Block interface | As a user I want a common Block interface so that all steps are interchangeable. | Protocol defined and documented, contract includes chunk invariance<br>Used by a Gain block with tests | 2 | S0.1 | v0.1.0 | done | 1 |
+| S1.3 | Window functions | As a user I want standard windows (Hann, Hamming, Blackman, Blackman-Harris, Kaiser, flat-top). | Match scipy.signal.get_window to 1e-12<br>Coherent gain and ENBW helpers | 1 | S0.1 | v0.1.0 | done | 1 |
 | S1.4 | Complex and multichannel block contract | As a developer I want complex dtypes and multichannel arrays (channels x samples) in the block contract from the start, so that RF, radar and array processing need no refactor later. | A block with SUPPORTS_COMPLEX = False (BaseBlock default True) raises TypeError from process() on complex input, naming the block class<br>Contract test over dtypes bool, int16, float32, float64, complex64, complex128 x shapes (0,), (1,), (17,), (1, 17), (3, 17), (2, 3, 17), (3, 0) x real and complex Gain: shape, dtype and values as documented<br>BaseBlock.output_shape(input_shape) returns the output shape, default unchanged; tested for Gain<br>docs/conventions.md states array layout, empty chunks, the precision rule and shape-changing blocks (D-017) and SUPPORTS_COMPLEX; block.py docstrings link to it<br>*Note: Refined 07.11.2026: Sprint 1 (PR #19, #21) already delivered layout, empty chunks, int/bool to float64, precision rules and the Gain dtype tests.* | 1 | S1.1 | v0.1.0 | todo | 2 |
 | S1.5 | Block registry and parameter metadata | As a developer I want every block to declare its name and typed parameters, so that tests, YAML configs and optimisers can discover and construct blocks. | Explicit @register adds a concrete BaseBlock subclass to a Registry under a unique NAME; duplicate names raise; get() of an unknown name raises ValueError listing the known names; test-only blocks never enter the default registry<br>For every registered block b, type(b).from_params(b.params(), fs=b.fs_in) gives equal params() and fs_in; params() returns plain Python scalars and excludes fs<br>Param declares kind, default or REQUIRED, bounds and choices; construction enforces them with TypeError or ValueError, including bool for numeric kinds<br>*Note: Refined 07.11.2026, design defaults in D-018. Scalar parameters only; array parameters come with S3.3, search ranges with S17.1.* | 3 | S1.1 | v0.1.0 | todo | 2 |
 | S1.2 | Generic chunking test | As a developer I want an automatic chunking test so that every stateful block is stream-safe. | Hypothesis-based test runs for every registered block<br>Random chunk sizes including 0 and 1, plus fixed cases: empty first and last chunk, all chunks of length 1, one chunk, signal shorter than the latency<br>Real, complex and multichannel input with shapes (N,), (3, N), (2, 3, N)<br>Delay(n, *, fs): y[k] = x[k-n] with zeros before, latency n, state copied, shape and dtype fixed by the first chunk after reset(); a broken test block makes the property fail | 3 | S1.4, S1.5 | v0.1.0 | todo | 2 |
-| S1.6 | Precision policy | As a user I want to set the numeric precision for a whole pipeline or a single block (for example float32 throughout, or float64 inside with float32 output), so that I can trade accuracy against speed and memory without casting by hand. | A precision policy (input, float32, float64, or separate compute and output dtypes) can be set on a Pipeline and overridden per block; the default input keeps the D-017 rule<br>Every registered block passes the generic chunking test under each policy, with documented float32 tolerances<br>A documented timing and memory comparison of float32 and float64 for one representative chain (simple script; the benchmark harness S11.1 adds it to its report later)<br>*Note: Requested by Oli in the Sprint 2 refinement on 07.11.2026 (D-017). Check whether fixed point for the embedded port (E19) fits the same policy.* | 3 | S5.1, S1.2 | v0.3.0 | todo | 7 |
+| S1.6 | Precision policy | As a user I want to set the numeric precision for a whole pipeline or a single block (for example float32 throughout, or float64 inside with float32 output), so that I can trade accuracy against speed and memory without casting by hand. | A precision policy (input, float32, float64, or separate compute and output dtypes) can be set on a Pipeline and overridden per block; the default input keeps the D-017 rule<br>Every registered block passes the generic chunking test under each policy, with documented float32 tolerances<br>A documented timing and memory comparison of float32 and float64 for one representative chain (simple script; the benchmark harness S11.1 adds it to its report later)<br>*Note: Requested by Oli in the Sprint 2 refinement on 07.11.2026 (D-017). Check whether fixed point for the embedded port (E19) fits the same policy.* | 3 | S5.1, S1.2 | v0.3.0 | todo | 8 |
 
 ## E2 Signal generators and metrics
 
@@ -49,8 +49,8 @@
 | ID | Title | Story | Acceptance criteria | Pts | Deps | Release | Status | Sprint |
 |---|---|---|---|---|---|---|---|---|
 | S4.1 | STFT / ISTFT | As a user I want STFT/ISTFT with a perfect reconstruction check. | COLA check<br>Reconstruction error < 1e-10<br>Streaming STFT block passes chunking test | 3 | S1.3, S1.2 | v0.3.0 | todo | 6 |
-| S4.2 | Welch PSD and band energy | As a user I want Welch PSD and band energy for arbitrary band edges. | Parseval check on multitone ground truth<br>Non-uniform band edges supported | 3 | S4.1, S2.1 | v0.3.0 | todo | 7 |
-| S4.3 | Cross-spectrum and coherence | As a user I want cross-spectrum and coherence. | Matches SciPy | 2 | S4.2 | v0.3.0 | todo | 7 |
+| S4.2 | Welch PSD and band energy | As a user I want Welch PSD and band energy for arbitrary band edges. | Parseval check on multitone ground truth<br>Non-uniform band edges supported | 3 | S4.1, S2.1 | v0.3.0 | todo | 6 |
+| S4.3 | Cross-spectrum and coherence | As a user I want cross-spectrum and coherence. | Matches SciPy | 2 | S4.2 | v0.3.0 | todo | 6 |
 
 ## E5 Pipeline, config, CLI
 
@@ -64,7 +64,7 @@
 
 | ID | Title | Story | Acceptance criteria | Pts | Deps | Release | Status | Sprint |
 |---|---|---|---|---|---|---|---|---|
-| S6.1 | Spike: nanobind with one kernel | As a developer I want to know that a C++ kernel builds and binds on both OS before investing in the C++ core. | One FIR kernel callable from Python<br>Builds in CI on Linux and Windows<br>Written decision note in docs/plan/DECISIONS.md | 3 | S0.3 | v0.4.0 | todo | 8 |
+| S6.1 | Spike: nanobind with one kernel | As a developer I want to know that a C++ kernel builds and binds on both OS before investing in the C++ core. | One FIR kernel callable from Python<br>Builds in CI on Linux and Windows<br>Written decision note in docs/plan/DECISIONS.md | 3 | S0.3 | v0.4.0 | todo | 9 |
 | S6.2 | C++ streaming FIR and SOS IIR | As a user I want C++ implementations of the streaming filters. | Equal to the Python reference within stated tolerance<br>Faster than the pure NumPy path<br>Chunking test passes for the C++ blocks | 5 | S6.1, S3.3 | v0.4.0 | todo | 9 |
 | S6.3 | C++ STFT on pocketfft, optional FFTW | As a user I want a fast STFT. | Equal results with pocketfft and FFTW backends<br>FFTW off by default (license) | 5 | S6.1, S4.1 | v0.7.0 | todo | 15 |
 | S6.4 | C++ library usable without Python | As a C++ developer I want to use the core without Python. | CMake target with install rules<br>Minimal C++ example built in CI | 2 | S6.2 | v0.7.0 | todo | 15 |
@@ -83,8 +83,8 @@
 
 | ID | Title | Story | Acceptance criteria | Pts | Deps | Release | Status | Sprint |
 |---|---|---|---|---|---|---|---|---|
-| S8.1 | DWT / IDWT | As a user I want a discrete wavelet transform with perfect reconstruction (Haar, Daubechies, Symlets). | Reconstruction error < 1e-10<br>Coefficients match PyWavelets (test-only dependency) | 5 | S3.1 | v0.7.0 | todo | 17 |
-| S8.2 | Wavelet packets and best basis | As a user I want wavelet packet decomposition with a best-basis search. | Energy preserved<br>Best basis for a known test signal as expected | 3 | S8.1 | v0.7.0 | todo | 17 |
+| S8.1 | DWT / IDWT | As a user I want a discrete wavelet transform with perfect reconstruction (Haar, Daubechies, Symlets). | Reconstruction error < 1e-10<br>Coefficients match PyWavelets (test-only dependency) | 5 | S3.1 | v0.7.0 | todo | 18 |
+| S8.2 | Wavelet packets and best basis | As a user I want wavelet packet decomposition with a best-basis search. | Energy preserved<br>Best basis for a known test signal as expected | 3 | S8.1 | v0.7.0 | todo | 18 |
 | S8.3 | Streaming DWT block | As a user I want a streaming DWT block. | Passes chunking test<br>Latency documented per level | 3 | S8.1, S1.2 | v0.7.0 | todo | 18 |
 
 ## E9 Adaptive filters
@@ -93,7 +93,7 @@
 |---|---|---|---|---|---|---|---|---|
 | S9.1 | LMS and NLMS | As a user I want LMS and NLMS adaptive filters. | System identification converges to the true FIR within tolerance<br>Real and complex | 3 | S3.3 | v0.12.0 | todo | 27 |
 | S9.2 | RLS | As a user I want an RLS adaptive filter. | Converges faster than NLMS on the same problem, shown in a test<br>Numerically stable over 1e6 samples | 3 | S9.1 | v0.12.0 | todo | 28 |
-| S9.3 | Adaptive noise cancellation example | As a reader I want an example of adaptive noise cancellation with convergence statistics. | Learning curves averaged over Monte Carlo runs with CIs | 2 | S9.2, S16.3 | v0.12.0 | todo | 28 |
+| S9.3 | Adaptive noise cancellation example | As a reader I want an example of adaptive noise cancellation with convergence statistics. | Learning curves averaged over Monte Carlo runs with CIs | 2 | S9.2, S16.3 | v0.12.0 | todo | 29 |
 
 ## E10 Features and detection
 
@@ -109,18 +109,18 @@
 | ID | Title | Story | Acceptance criteria | Pts | Deps | Release | Status | Sprint |
 |---|---|---|---|---|---|---|---|---|
 | S11.1 | Benchmark harness | As a developer I want reproducible timing benchmarks. | Results as JSON with machine info and commit hash<br>Run locally via `pixi run bench`, not in CI timing | 3 | S6.2 | v0.7.0 | todo | 16 |
-| S11.2 | Benchmark report | As a reader I want benchmark plots against SciPy/NumPy. | Plots and table generated from stored JSON<br>Hardware stated in the docs | 2 | S11.1 | v0.7.0 | todo | 17 |
-| S11.3 | Operation-count cost model | As an optimiser I need the compute cost of a pipeline, so that accuracy can be traded against cost. | Each block reports multiplies/adds per input sample<br>Pipeline sums them<br>Checked against hand counts for FIR, FFT, CFAR | 3 | S5.1 | v0.8.0 | todo | 18 |
+| S11.2 | Benchmark report | As a reader I want benchmark plots against SciPy/NumPy. | Plots and table generated from stored JSON<br>Hardware stated in the docs | 2 | S11.1 | v0.7.0 | todo | 16 |
+| S11.3 | Operation-count cost model | As an optimiser I need the compute cost of a pipeline, so that accuracy can be traded against cost. | Each block reports multiplies/adds per input sample<br>Pipeline sums them<br>Checked against hand counts for FIR, FFT, CFAR | 3 | S5.1 | v0.8.0 | todo | 16 |
 
 ## E12 Domain examples, docs, v1.0
 
 | ID | Title | Story | Acceptance criteria | Pts | Deps | Release | Status | Sprint |
 |---|---|---|---|---|---|---|---|---|
-| S12.1 | Audio example | As a reader I want an audio example (denoising/EQ with spectrogram before/after). | Runs from one config<br>Only synthetic or openly licensed audio | 2 | S5.3, S4.1 | v1.0.0 | todo | 28 |
+| S12.1 | Audio example | As a reader I want an audio example (denoising/EQ with spectrogram before/after). | Runs from one config<br>Only synthetic or openly licensed audio | 2 | S5.3, S4.1 | v1.0.0 | todo | 30 |
 | S12.2 | EEG band power example | As a reader I want an EEG band-power example on a public dataset. | Dataset license checked and stated<br>Delta to beta band power over time | 3 | S10.3, S3.3 | v1.0.0 | todo | 30 |
 | S12.3 | Vibration example | As a reader I want a vibration / bearing-fault style example with envelope analysis. | Synthetic or openly licensed data<br>Fault frequency detected | 3 | S10.2, S3.3 | v1.0.0 | todo | 30 |
 | S12.4 | Tutorials and theory pages | As a reader I want tutorials and theory pages for the main modules. | One tutorial per domain example<br>Theory pages with references | 3 | S0.4 | v1.0.0 | todo | 30 |
-| S12.5 | API review and freeze | As a user I want a stable 1.0 API. | Public API reviewed and documented<br>Deprecation and semver policy written | 3 | S5.2 | v1.0.0 | todo | 30 |
+| S12.5 | API review and freeze | As a user I want a stable 1.0 API. | Public API reviewed and documented<br>Deprecation and semver policy written | 3 | S5.2 | v1.0.0 | todo | 31 |
 | S12.6 | README and results summary | As a reviewer I want to understand the project in two minutes. | Headline figure, results table with hardware, quickstart tested in CI | 2 | S12.4 | v1.0.0 | todo | 31 |
 
 ## E13 RF / communications
@@ -140,7 +140,7 @@
 |---|---|---|---|---|---|---|---|---|
 | S14.1 | Radar waveforms | As a user I want radar waveforms (pulsed LFM, FMCW chirp, Barker and Frank codes). | Bandwidth and duration match parameters | 2 | S13.1 | v0.9.0 | todo | 20 |
 | S14.2 | Point-target scene simulator | As a tester I want a point-target scene simulator (range, radial velocity, amplitude, noise). | Ground truth returned with the data cube<br>Seeded | 3 | S14.1, S2.1 | v0.9.0 | todo | 20 |
-| S14.3 | Pulse compression | As a user I want pulse compression via matched filter. | Peak at true range<br>Sidelobe level matches theory for the waveform | 3 | S14.1, S3.3 | v0.9.0 | todo | 20 |
+| S14.3 | Pulse compression | As a user I want pulse compression via matched filter. | Peak at true range<br>Sidelobe level matches theory for the waveform | 3 | S14.1, S3.3 | v0.9.0 | todo | 21 |
 | S14.4 | Range-Doppler map | As a user I want a range-Doppler map from an FMCW data cube (fast-time x slow-time FFT). | Simulated targets appear at correct range and velocity bins<br>Window choice per axis | 5 | S14.2, S4.1 | v0.9.0 | todo | 21 |
 | S14.5 | 2D CA-CFAR | As a user I want 2D CA-CFAR on the range-Doppler map. | False-alarm rate matches the set Pfa on noise-only data | 3 | S14.4, S10.1 | v0.9.0 | todo | 21 |
 | S14.8 | Target list and scoring | As a tester I want detections clustered into a target list and scored against ground truth. | Peak grouping and centroiding to range/velocity<br>Pd, false alarms and range/velocity RMSE per run | 3 | S14.5 | v0.10.0 | todo | 22 |
@@ -155,7 +155,7 @@
 |---|---|---|---|---|---|---|---|---|
 | S15.1 | ULA model and steering vectors | As a user I want a uniform linear array model with steering vectors. | Array response matches the analytic steering vector | 2 | S13.1 | v0.12.0 | todo | 26 |
 | S15.2 | Delay-and-sum beamforming | As a user I want delay-and-sum beamforming. | Main lobe and grating lobes as predicted | 3 | S15.1 | v0.12.0 | todo | 26 |
-| S15.3 | Angle estimation for MIMO radar | As a user I want angle estimation (angle FFT, later MUSIC) for a MIMO radar cube. | Simulated target angles recovered within resolution | 5 | S15.2, S14.4 | v0.12.0 | todo | 28 |
+| S15.3 | Angle estimation for MIMO radar | As a user I want angle estimation (angle FFT, later MUSIC) for a MIMO radar cube. | Simulated target angles recovered within resolution | 5 | S15.2, S14.4 | v0.12.0 | todo | 27 |
 
 ## E16 Simulation and Monte Carlo
 
@@ -173,11 +173,11 @@
 | ID | Title | Story | Acceptance criteria | Pts | Deps | Release | Status | Sprint |
 |---|---|---|---|---|---|---|---|---|
 | S17.1 | Parameter spaces | As a user I want parameter spaces derived from block configs (ranges, choices, log scale). | Space round-trips to YAML<br>Invalid configs rejected | 2 | S1.5, S5.2 | v0.8.0 | todo | 17 |
-| S17.2 | Bayesian optimisation | As a user I want Bayesian optimisation of a pipeline against a Monte Carlo objective. | Finds the known optimum of a filter design toy problem within budget<br>*Note: Needs Optuna (ask first).* | 3 | S17.1, S16.2 | v0.8.0 | todo | 18 |
-| S17.3 | Multi-objective optimisation | As a user I want multi-objective optimisation with a Pareto front (accuracy vs cost). | Pareto plot and table of non-dominated configs exported | 3 | S17.2, S11.3 | v0.8.0 | todo | 18 |
+| S17.2 | Bayesian optimisation | As a user I want Bayesian optimisation of a pipeline against a Monte Carlo objective. | Finds the known optimum of a filter design toy problem within budget<br>*Note: Needs Optuna (ask first).* | 3 | S17.1, S16.2 | v0.8.0 | todo | 19 |
+| S17.3 | Multi-objective optimisation | As a user I want multi-objective optimisation with a Pareto front (accuracy vs cost). | Pareto plot and table of non-dominated configs exported | 3 | S17.2, S11.3 | v0.8.0 | todo | 19 |
 | S17.4 | Robust optimisation | As a user I want robust optimisation (objective = worst case or percentile over scenarios). | Robust optimum degrades less under impairment shift than the nominal optimum, shown in a test | 3 | S17.2 | v0.8.0 | todo | 19 |
 | S17.5 | Optimisation report | As a user I want an optimisation report (best config, history, sensitivity). | Markdown and figures from one command | 2 | S17.3 | v0.8.0 | todo | 19 |
-| S17.6 | Showcase: optimised detection chain | As a reader I want an end-to-end example: simulate, verify, optimise a detection chain. | Tone-in-noise scenario, window/band/CFAR parameters tuned<br>Pareto front Pd vs ops with CIs | 3 | S17.3, S16.6 | v0.8.0 | todo | 19 |
+| S17.6 | Showcase: optimised detection chain | As a reader I want an end-to-end example: simulate, verify, optimise a detection chain. | Tone-in-noise scenario, window/band/CFAR parameters tuned<br>Pareto front Pd vs ops with CIs | 3 | S17.3, S16.6 | v0.8.0 | todo | 20 |
 
 ## E18 Surrogates and learned components
 

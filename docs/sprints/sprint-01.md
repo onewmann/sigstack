@@ -1,4 +1,6 @@
-# Sprint 1 — 09.11. – 22.11.2026
+# Sprint 1 — 26.10. – 08.11.2026
+
+> Planned for 09.11.–22.11.2026; the work was done on 06.–07.11.2026, so the calendar moved two weeks earlier (D-020).
 
 **Sprint goal:** `pixi install && pixi run check` works on Fedora and Windows, CI runs on every pull request, the `Block` interface and window functions exist.
 
@@ -277,13 +279,16 @@ Then in the browser: create a Project (board) "sigstack", add fields *Points* (n
 
 ### Review notes
 
-- Done points:
-- Not done:
+- Done points: 8 of 8 (S0.1, S0.2, S0.5, S1.1, S1.3); sprint goal reached. Evidence: PRs #10–#12, #15, #16, #19–#21; issues #1–#5 closed; CI green on Ubuntu and Windows.
+- Not done: none. S0.1's Windows criterion is met by CI on `windows-latest`; the check on Oli's Windows laptop (T2) and the Projects board (T8) remain open tasks.
+- Also delivered: planning system import (#17, #18), bool input rule (D-016), Sprint 2 refinement (#23, D-017 to D-019).
+- Time: Oli 4–8 h (reading, decisions, approvals).
 
 ### Retro
 
-- Keep:
-- Change:
+- Keep: independent review before every merge; deciding together with option tables and a recommendation; simulating plan changes with `plan.py` before applying them; small PRs with CI on both OS.
+- Change: faster merge approvals (Oli names all PRs to merge in one message, or adds a permission rule); shorter status messages, details in PRs and vault notes.
+- Priorities: no change (profile `default`).
 
 ### Log
 
@@ -299,3 +304,4 @@ Then in the browser: create a Project (board) "sigstack", add fields *Points* (n
 | 06.11.2026 | T5 | | PR #16 merged, closes #2; branch protection on `main` applied (both checks required, pinned to GitHub Actions, admins included, linear history); issue forms render without errors on GitHub |
 | 07.11.2026 | T6 | | Design approved ("carry on"); PR #19 merged, closes #4; independent review found float32-exact test gains, fixed. Bool input decided (D-016), follow-up #21 |
 | 07.11.2026 | T7 | | PR #20 merged, closes #5; agrees with SciPy to 2e-14; Kaiser rejects beta where I0 overflows; flat-top from D'Antona and Ferrero instead of Harris |
+| 07.11.2026 | T9 | 4–8 h (Oli) | `/sprint-review 1`: 8 of 8 points, retro, calendar moved two weeks earlier (D-020); tag `v0.0.1` and `/plan-sprint 2` follow |

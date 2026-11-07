@@ -88,7 +88,7 @@ story = "As a developer I want a pixi environment so that the setup runs with on
 ac = ["`pixi install && pixi run check` works on Fedora and Windows"]
 points = 2
 deps = []
-status = "committed"
+status = "done"
 sprint = 1
 
 [[story]]
@@ -100,7 +100,7 @@ story = "As a developer I want CI on every push so that broken code never reache
 ac = ["Lint, typecheck and tests run on Ubuntu and Windows", "Required status check for merging into main"]
 points = 2
 deps = ["S0.1"]
-status = "committed"
+status = "done"
 sprint = 1
 
 [[story]]
@@ -112,7 +112,7 @@ story = "As a developer I want pre-commit hooks so that style is consistent."
 ac = ["ruff, ruff-format, mypy active", "`pre-commit run --all-files` passes"]
 points = 1
 deps = ["S0.1"]
-status = "committed"
+status = "done"
 sprint = 1
 
 [[story]]
@@ -124,7 +124,7 @@ story = "As a user I want a common Block interface so that all steps are interch
 ac = ["Protocol defined and documented, contract includes chunk invariance", "Used by a Gain block with tests"]
 points = 2
 deps = ["S0.1"]
-status = "committed"
+status = "done"
 sprint = 1
 
 [[story]]
@@ -136,7 +136,7 @@ story = "As a user I want standard windows (Hann, Hamming, Blackman, Blackman-Ha
 ac = ["Match scipy.signal.get_window to 1e-12", "Coherent gain and ENBW helpers"]
 points = 1
 deps = ["S0.1"]
-status = "committed"
+status = "done"
 sprint = 1
 
 [[story]]
