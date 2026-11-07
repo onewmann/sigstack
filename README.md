@@ -26,12 +26,25 @@ python -m pytest
 
 ## Quickstart
 
-There is no public API yet. The first blocks (`Block` interface, window functions) are planned for Sprint 1.
+```python
+import numpy as np
+
+from sigstack import Gain, enbw, get_window
+
+w = get_window("hann", 1024)  # periodic Hann window
+print(round(enbw(w), 3))  # 1.5 (equivalent noise bandwidth in bins)
+
+gain = Gain(0.5, fs=48_000.0)
+x = np.ones((2, 4))  # 2 channels, 4 samples: samples on the last axis
+print(gain.process(x).shape)  # (2, 4)
+```
+
+Every block follows the same contract (`sigstack.Block`): `process()` keeps its state between calls, so a signal can be processed in one call or in chunks with the same result.
 
 ## Roadmap
 
 Architecture, backlog and release plan: [docs/ROADMAP.md](docs/ROADMAP.md).
-Current sprint: [docs/sprints/sprint-01.md](docs/sprints/sprint-01.md).
+Current sprint: the highest-numbered file in [docs/sprints/](docs/sprints/) that is not marked as a draft.
 
 ## License
 
