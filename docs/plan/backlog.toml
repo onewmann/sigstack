@@ -145,21 +145,11 @@ epic = "E1"
 group = "foundation"
 title = "Complex and multichannel block contract"
 story = "As a developer I want complex dtypes and multichannel arrays (channels x samples) in the block contract from the start, so that RF, radar and array processing need no refactor later."
-ac = ["Gain passes tests for real, complex, 1-channel and N-channel input", "Dtype promotion rules documented"]
-points = 2
+ac = ["A block with SUPPORTS_COMPLEX = False (BaseBlock default True) raises TypeError from process() on complex input, naming the block class", "Contract test over dtypes bool, int16, float32, float64, complex64, complex128 x shapes (0,), (1,), (17,), (1, 17), (3, 17), (2, 3, 17), (3, 0) x real and complex Gain: shape, dtype and values as documented", "BaseBlock.output_shape(input_shape) returns the output shape, default unchanged; tested for Gain", "docs/conventions.md states array layout, empty chunks, the precision rule and shape-changing blocks (D-017) and SUPPORTS_COMPLEX; block.py docstrings link to it"]
+points = 1
 deps = ["S1.1"]
 status = "todo"
-
-[[story]]
-id = "S1.2"
-epic = "E1"
-group = "foundation"
-title = "Generic chunking test"
-story = "As a developer I want an automatic chunking test so that every stateful block is stream-safe."
-ac = ["Hypothesis-based test runs for every registered block", "Random chunk sizes including 0 and 1", "Real, complex and multichannel input", "A stateful Delay block exists so the property is exercised; a broken test block makes it fail"]
-points = 3
-deps = ["S1.4", "S1.5"]
-status = "todo"
+notes = "Refined 07.11.2026: Sprint 1 (PR #19, #21) already delivered layout, empty chunks, int/bool to float64, precision rules and the Gain dtype tests."
 
 [[story]]
 id = "S1.5"
@@ -167,9 +157,21 @@ epic = "E1"
 group = "foundation"
 title = "Block registry and parameter metadata"
 story = "As a developer I want every block to declare its name and typed parameters, so that tests, YAML configs and optimisers can discover and construct blocks."
-ac = ["Registry lists all blocks", "Each block exposes params() and from_params() that round-trip", "Parameter ranges/choices can be declared"]
-points = 2
+ac = ["Explicit @register adds a concrete BaseBlock subclass to a Registry under a unique NAME; duplicate names raise; get() of an unknown name raises ValueError listing the known names; test-only blocks never enter the default registry", "For every registered block b, type(b).from_params(b.params(), fs=b.fs_in) gives equal params() and fs_in; params() returns plain Python scalars and excludes fs", "Param declares kind, default or REQUIRED, bounds and choices; construction enforces them with TypeError or ValueError, including bool for numeric kinds"]
+points = 3
 deps = ["S1.1"]
+status = "todo"
+notes = "Refined 07.11.2026, design defaults in D-018. Scalar parameters only; array parameters come with S3.3, search ranges with S17.1."
+
+[[story]]
+id = "S1.2"
+epic = "E1"
+group = "foundation"
+title = "Generic chunking test"
+story = "As a developer I want an automatic chunking test so that every stateful block is stream-safe."
+ac = ["Hypothesis-based test runs for every registered block", "Random chunk sizes including 0 and 1, plus fixed cases: empty first and last chunk, all chunks of length 1, one chunk, signal shorter than the latency", "Real, complex and multichannel input with shapes (N,), (3, N), (2, 3, N)", "Delay(n, *, fs): y[k] = x[k-n] with zeros before, latency n, state copied, shape and dtype fixed by the first chunk after reset(); a broken test block makes the property fail"]
+points = 3
+deps = ["S1.4", "S1.5"]
 status = "todo"
 
 [[story]]
@@ -227,6 +229,30 @@ ac = ["Pushing a tag vX.Y.Z builds sdist and wheel and creates a GitHub release"
 points = 2
 deps = ["S0.2"]
 status = "todo"
+
+[[story]]
+id = "S0.6"
+epic = "E0"
+group = "signals-docs"
+title = "Devcontainer (Codespaces)"
+story = "As a reviewer I want to open sigstack in GitHub Codespaces, so that I can run the checks without installing anything locally."
+ac = ["A Codespace on the branch builds from .devcontainer/devcontainer.json with no manual step and `pixi run check` passes in it", "pixi pinned to the CI version, `pixi install --locked`, environment in a container volume so the host .pixi/ is untouched", "README has an Open in GitHub Codespaces link"]
+points = 1
+deps = ["S0.1"]
+status = "todo"
+notes = "Refined 07.11.2026 (D-019): local Podman and Flatpak VS Code support split out as S0.9."
+
+[[story]]
+id = "S0.9"
+epic = "E0"
+group = "signals-docs"
+title = "Local devcontainer (Podman, Flatpak VS Code)"
+story = "As the maintainer I want the devcontainer to work locally with rootless Podman and Flatpak VS Code on Fedora, so that I can develop in the container without Docker."
+ac = ["Flatpak VS Code opens the repo in the devcontainer through rootless Podman (host wrapper via flatpak-spawn) with no manual step inside the container", "`pixi run check` passes in the local container; files written in the container belong to the host user and the SELinux label allows the bind mount", "Setup steps documented in CONTRIBUTING"]
+points = 1
+deps = ["S0.6"]
+status = "todo"
+notes = "Split from S0.6 on 07.11.2026 (D-019)."
 
 # ============================================ groups: filters, spectral
 [[story]]
@@ -306,17 +332,6 @@ points = 2
 deps = ["S4.2"]
 status = "todo"
 
-[[story]]
-id = "S0.6"
-epic = "E0"
-group = "spectral"
-title = "Devcontainer"
-story = "As a reviewer I want a devcontainer, so that I can run the project without installing anything locally."
-ac = ["Opens in VS Code / Codespaces", "`pixi run check` passes inside"]
-points = 1
-deps = ["S0.1"]
-status = "todo"
-
 # ================================================ groups: pipeline, cpp-core
 [[story]]
 id = "S5.1"
@@ -328,6 +343,18 @@ ac = ["Sample rates and latency propagate correctly", "A pipeline is itself a Bl
 points = 3
 deps = ["S1.5", "S3.3"]
 status = "todo"
+
+[[story]]
+id = "S1.6"
+epic = "E1"
+group = "pipeline"
+title = "Precision policy"
+story = "As a user I want to set the numeric precision for a whole pipeline or a single block (for example float32 throughout, or float64 inside with float32 output), so that I can trade accuracy against speed and memory without casting by hand."
+ac = ["A precision policy (input, float32, float64, or separate compute and output dtypes) can be set on a Pipeline and overridden per block; the default input keeps the D-017 rule", "Every registered block passes the generic chunking test under each policy, with documented float32 tolerances", "A documented timing and memory comparison of float32 and float64 for one representative chain (simple script; the benchmark harness S11.1 adds it to its report later)"]
+points = 3
+deps = ["S5.1", "S1.2"]
+status = "todo"
+notes = "Requested by Oli in the Sprint 2 refinement on 07.11.2026 (D-017). Check whether fixed point for the embedded port (E19) fits the same policy."
 
 [[story]]
 id = "S5.2"
