@@ -5,21 +5,26 @@ stream of chunks. :class:`Block` defines the contract, :class:`BaseBlock` is a
 small helper that validates sampling rates and input arrays, and :class:`Gain`
 is the simplest block that implements it.
 
-The block model is described in ``docs/ROADMAP.md``, section 2.2.
+The block model is described in ``docs/ROADMAP.md``, section 2.2; the full
+rules are in ``docs/conventions.md``.
 
-Dtype rules
------------
+Dtype and shape rules
+---------------------
 Unless a block documents otherwise:
 
 - Boolean and integer input is converted to ``float64`` before processing
-  (``True`` becomes 1.0). String, object
-  and date/time arrays are rejected. Scalar parameters such as ``fs`` stay
-  strict: ``True`` is not accepted as a number.
-- Floating and complex input keeps its precision: ``float32`` stays ``float32``
-  (or becomes ``complex64`` if the block produces complex output), ``float64``
-  stays ``float64`` (or becomes ``complex128``). Other floating and complex
-  dtypes (``float16``, ``longdouble``, ``clongdouble``) keep their precision too.
-- Complex input gives complex output.
+  (``True`` becomes 1.0). String, object and date/time arrays are rejected.
+  Scalar parameters such as ``fs`` stay strict: ``True`` is not a number.
+- The output has the precision of the input: ``float32`` stays ``float32`` (or
+  becomes ``complex64`` if the block produces complex output), ``float64``
+  stays ``float64`` (or ``complex128``). Parameters are rounded to that
+  precision. A block may compute internally at a higher precision, but it
+  returns the input precision (D-017).
+- Complex input gives complex output. A block that cannot handle it sets
+  ``SUPPORTS_COMPLEX = False`` and rejects complex input with ``TypeError``.
+- The last axis is time. Leading axes are channels or batch dimensions and are
+  unchanged by default; :meth:`BaseBlock.output_shape` reports the shape a
+  block returns.
 """
 
 from __future__ import annotations
@@ -27,8 +32,9 @@ from __future__ import annotations
 import cmath
 import math
 import numbers
+import operator
 from abc import ABC, abstractmethod
-from typing import Any, Protocol, runtime_checkable
+from typing import Any, ClassVar, Protocol, runtime_checkable
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
@@ -49,9 +55,11 @@ class Block(Protocol):
     Every block follows this contract:
 
     - **Array layout.** Samples are on the last axis: the input has shape
-      ``(..., n_samples)``. Leading axes are channels or batch dimensions; they
-      are processed independently and appear unchanged in the output. A
-      multichannel signal has shape ``(n_channels, n_samples)``.
+      ``(..., n_samples)``. Leading axes are channels or batch dimensions; by
+      default they are processed independently and appear unchanged in the
+      output. A multichannel signal has shape ``(n_channels, n_samples)``. A
+      block that adds, removes or mixes axes before the last one documents its
+      output shape.
     - **State.** :meth:`process` keeps its internal state between calls, so
       consecutive calls receive consecutive pieces of one signal.
     - **Chunk invariance.** For any split of a signal :math:`x` along the last
@@ -67,7 +75,8 @@ class Block(Protocol):
     - **Reset.** :meth:`reset` restores the state the block had right after
       construction.
     - **Dtypes.** Real and complex input are supported unless the block
-      documents otherwise; see the dtype rules in :mod:`sigstack.core.block`.
+      documents otherwise; see the dtype rules in :mod:`sigstack.core.block`
+      and ``docs/conventions.md``.
 
     ``isinstance(obj, Block)`` only checks that the members exist, not their
     signatures or the contract.
@@ -134,8 +143,19 @@ class BaseBlock(ABC):
     Subclasses implement :attr:`latency`, :meth:`reset` and :meth:`_process`.
     :meth:`process` validates the input and then calls :meth:`_process`, so
     ``_process`` always receives an array with ``ndim >= 1`` and a floating or
-    complex dtype (boolean and integer input already converted to ``float64``). It must not
-    modify that array in place, because it may be the caller's array.
+    complex dtype (boolean and integer input already converted to ``float64``,
+    complex input already rejected if the class sets ``SUPPORTS_COMPLEX =
+    False``). It must not modify that array in place, because it may be the
+    caller's array.
+
+    A subclass that changes the shape (adds, removes or mixes leading axes, or
+    changes the number of samples) overrides :meth:`output_shape`.
+
+    Attributes
+    ----------
+    SUPPORTS_COMPLEX : bool
+        Class attribute, ``True`` by default. Set it to ``False`` in a subclass
+        that cannot process complex input.
 
     Parameters
     ----------
@@ -151,6 +171,8 @@ class BaseBlock(ABC):
     ValueError
         If a rate is not finite or not > 0.
     """
+
+    SUPPORTS_COMPLEX: ClassVar[bool] = True
 
     def __init__(self, *, fs: float, fs_out: float | None = None) -> None:
         self._fs_in = _check_rate(fs, "fs")
@@ -195,9 +217,46 @@ class BaseBlock(ABC):
             If ``x`` is a scalar (0-d).
         TypeError
             If ``x`` does not have a boolean, integer, floating or complex dtype
-            (for example string, object or date/time).
+            (for example string, object or date/time), or if ``x`` is complex
+            and the class sets ``SUPPORTS_COMPLEX = False`` (also when the
+            imaginary part is zero).
         """
-        return self._process(_as_signal(x))
+        arr = _as_signal(x)
+        if arr.dtype.kind == "c" and not self.SUPPORTS_COMPLEX:
+            raise TypeError(
+                f"{type(self).__name__} does not support complex input, got dtype {arr.dtype}"
+            )
+        return self._process(arr)
+
+    def output_shape(self, input_shape: tuple[int, ...]) -> tuple[int, ...]:
+        """Return the shape that :meth:`process` returns for input of ``input_shape``.
+
+        The default is the input shape. A block that adds, removes or mixes
+        leading axes, or changes the number of samples, overrides it, so that a
+        pipeline can check a chain of blocks before it runs.
+
+        Parameters
+        ----------
+        input_shape : tuple of int
+            Shape ``(..., n_samples)`` of the input: at least one axis, no
+            negative lengths.
+
+        Returns
+        -------
+        tuple of int
+            Shape of the output.
+
+        Raises
+        ------
+        ValueError
+            If ``input_shape`` is empty or has a negative length.
+        """
+        shape = tuple(operator.index(n) for n in input_shape)
+        if not shape or any(n < 0 for n in shape):
+            raise ValueError(
+                f"input_shape must have at least one axis and no negative length, got {shape}"
+            )
+        return shape
 
     @abstractmethod
     def _process(self, x: NDArray[Any]) -> NDArray[Any]:

@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `docs/conventions.md` with the block contract: array layout, empty chunks, dtype and precision rules (D-016, D-017), shape-changing blocks, complex opt-out.
+- `BaseBlock.SUPPORTS_COMPLEX` (complex input rejected with `TypeError` when `False`) and `BaseBlock.output_shape(input_shape)`.
+
 ## [0.0.1] - 2026-11-07
 
 Sprint 1: tooling, CI, the block interface and window functions.
