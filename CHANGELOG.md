@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.1] - 2026-11-07
+
+Sprint 1: tooling, CI, the block interface and window functions.
+
 ### Added
 
 - Window functions in `sigstack.core.windows`: rectangular, Hann, Hamming, Blackman, 4-term Blackman-Harris, flat-top and Kaiser, symmetric or periodic (DFT-even), from their closed-form definitions; `general_cosine`, `get_window`, `coherent_gain` and `enbw`. Agree with `scipy.signal.get_window` to 1e-12.
@@ -17,3 +21,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Code quality tooling: ruff (lint + format) and mypy (strict) configured in `pyproject.toml`, pre-commit hooks, `.clang-format`, CONTRIBUTING section on local checks.
 - pixi environment (`pixi.toml`, `pixi.lock`) for linux-64 and win-64 with tasks `test`, `lint`, `fmt`, `typecheck`, `check`.
 - Repository skeleton: license, README, changelog, `pyproject.toml` (hatchling), package `sigstack` with `core` subpackage, import test.
+
+[Unreleased]: https://github.com/onewmann/sigstack/compare/v0.0.1...HEAD
+[0.0.1]: https://github.com/onewmann/sigstack/releases/tag/v0.0.1
