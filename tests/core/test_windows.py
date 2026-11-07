@@ -127,9 +127,9 @@ def test_general_cosine_rejects_bad_coefficients(a: Any) -> None:
         general_cosine(8, a)
 
 
-@pytest.mark.parametrize("a", [[0.5 + 1j, 0.5], [True, False], ["0.5", "0.5"]])
+@pytest.mark.parametrize("a", [[0.5 + 1j, 0.5], ["0.5", "0.5"]])
 def test_general_cosine_rejects_non_real_coefficients(a: Any) -> None:
-    with pytest.raises(TypeError, match="a must contain integers or floats"):
+    with pytest.raises(TypeError, match="a must contain real numbers"):
         general_cosine(8, a)
 
 
@@ -181,10 +181,16 @@ def test_helpers_reject_non_1d_or_empty(helper: Any, w: Any) -> None:
 
 
 @pytest.mark.parametrize("helper", [coherent_gain, enbw])
-@pytest.mark.parametrize("w", [[1 + 1j, 1 - 1j], [True, False], ["1", "2"]])
+@pytest.mark.parametrize("w", [[1 + 1j, 1 - 1j], ["1", "2"]])
 def test_helpers_reject_non_real_samples(helper: Any, w: Any) -> None:
-    with pytest.raises(TypeError, match="w must contain integers or floats"):
+    with pytest.raises(TypeError, match="w must contain real numbers"):
         helper(w)
+
+
+def test_helpers_accept_a_boolean_gating_window() -> None:
+    gate = np.array([True, True, False, False])
+    assert_allclose(coherent_gain(gate), 0.5, rtol=0, atol=0)  # exact: 2 / 4
+    assert_allclose(enbw(gate), 2.0, rtol=0, atol=0)  # exact: 4 * 2 / 2**2
 
 
 @pytest.mark.parametrize("helper", [coherent_gain, enbw])

@@ -80,6 +80,7 @@ def test_base_block_rates() -> None:
     [
         (np.arange(4, dtype=np.int16), np.float64),
         (np.arange(4, dtype=np.uint8), np.float64),
+        (np.array([True, False]), np.float64),
         ([1, 2, 3], np.float64),
         (np.ones(4, dtype=np.float32), np.float32),
         (np.ones(4, dtype=np.complex64), np.complex64),
@@ -172,6 +173,16 @@ def test_numpy_and_int_gains_keep_input_precision(g: Any, out_dtype: type) -> No
     assert y.dtype == out_dtype
 
 
+@pytest.mark.parametrize(("g", "out_dtype"), [(2.5, np.float64), (1j, np.complex128)])
+def test_gain_converts_bool_input_to_float(g: complex, out_dtype: type) -> None:
+    # A bit stream as a bool array: True counts as 1.0, as in NumPy arithmetic.
+    y = Gain(g, fs=FS).process(np.array([[True, False, True], [False, False, True]]))
+    assert y.dtype == out_dtype
+    assert_allclose(
+        y, g * np.array([[1.0, 0.0, 1.0], [0.0, 0.0, 1.0]]), rtol=0, atol=0
+    )  # exact: g * 1, g * 0
+
+
 def test_gain_accepts_lists() -> None:
     y = Gain(2.0, fs=FS).process([1, 2, 3])
     assert y.dtype == np.float64
@@ -231,14 +242,13 @@ def test_scalar_input_raises_value_error(x: Any) -> None:
 @pytest.mark.parametrize(
     "x",
     [
-        np.array([True, False]),
         np.array(["a", "b"]),
         np.array([object(), object()]),
         np.array(["2026-11-06"], dtype="datetime64[D]"),
     ],
 )
 def test_non_numeric_input_raises_type_error(x: Any) -> None:
-    with pytest.raises(TypeError, match="integer, floating or complex array"):
+    with pytest.raises(TypeError, match="boolean, integer, floating or complex array"):
         Gain(1.0, fs=FS).process(x)
 
 

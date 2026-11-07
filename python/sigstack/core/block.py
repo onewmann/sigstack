@@ -11,8 +11,10 @@ Dtype rules
 -----------
 Unless a block documents otherwise:
 
-- Integer input is converted to ``float64`` before processing. Boolean, string,
-  object and date/time arrays are rejected.
+- Boolean and integer input is converted to ``float64`` before processing
+  (``True`` becomes 1.0), as NumPy and SciPy do in arithmetic. String, object
+  and date/time arrays are rejected. Scalar parameters such as ``fs`` stay
+  strict: ``True`` is not accepted as a number.
 - Floating and complex input keeps its precision: ``float32`` stays ``float32``
   (or becomes ``complex64`` if the block produces complex output), ``float64``
   stays ``float64`` (or becomes ``complex128``). Other floating and complex
@@ -107,8 +109,8 @@ def _check_rate(value: object, name: str) -> float:
 def _as_signal(x: ArrayLike) -> NDArray[Any]:
     """Return ``x`` as an array with ``ndim >= 1`` and a floating or complex dtype.
 
-    Integer arrays are converted to ``float64``; floating and complex arrays are
-    returned without a copy.
+    Boolean and integer arrays are converted to ``float64``; floating and complex
+    arrays are returned without a copy.
     """
     arr = np.asarray(x)
     if arr.ndim < 1:
@@ -117,11 +119,13 @@ def _as_signal(x: ArrayLike) -> NDArray[Any]:
             f"got a {arr.ndim}-d array"
         )
     kind = arr.dtype.kind
-    if kind in "iu":
+    if kind in "biu":
         return arr.astype(np.float64)
     if kind in "fc":
         return arr
-    raise TypeError(f"input must be an integer, floating or complex array, got dtype {arr.dtype}")
+    raise TypeError(
+        f"input must be a boolean, integer, floating or complex array, got dtype {arr.dtype}"
+    )
 
 
 class BaseBlock(ABC):
@@ -130,7 +134,7 @@ class BaseBlock(ABC):
     Subclasses implement :attr:`latency`, :meth:`reset` and :meth:`_process`.
     :meth:`process` validates the input and then calls :meth:`_process`, so
     ``_process`` always receives an array with ``ndim >= 1`` and a floating or
-    complex dtype (integer input already converted to ``float64``). It must not
+    complex dtype (boolean and integer input already converted to ``float64``). It must not
     modify that array in place, because it may be the caller's array.
 
     Parameters
@@ -177,8 +181,8 @@ class BaseBlock(ABC):
         Parameters
         ----------
         x : array_like
-            Input of shape ``(..., n_samples)`` with an integer, floating or
-            complex dtype. ``n_samples`` may be 0.
+            Input of shape ``(..., n_samples)`` with a boolean, integer, floating
+            or complex dtype. ``n_samples`` may be 0.
 
         Returns
         -------
@@ -190,7 +194,7 @@ class BaseBlock(ABC):
         ValueError
             If ``x`` is a scalar (0-d).
         TypeError
-            If ``x`` has a boolean, string, object or other non-numeric dtype.
+            If ``x`` has a string, object, date/time or other non-numeric dtype.
         """
         return self._process(_as_signal(x))
 
@@ -230,7 +234,7 @@ class Gain(BaseBlock):
     ==================  ==============  ==============
     input dtype         real gain       complex gain
     ==================  ==============  ==============
-    integer             ``float64``     ``complex128``
+    boolean, integer    ``float64``     ``complex128``
     ``float32``         ``float32``     ``complex64``
     ``float64``         ``float64``     ``complex128``
     ``complex64``       ``complex64``   ``complex64``
