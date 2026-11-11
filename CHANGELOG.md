@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Test signal generators in `sigstack.signals` (S2.1): `multitone`, `chirp` (linear, logarithmic), `impulse`, `white_noise`, `pink_noise`, `am`, `fm`. Each returns the signal and a `SignalInfo` record (frequencies, amplitudes, theoretical mean power, parameters); seeded through `rng`, complex variants via `as_complex`. Tests with exact values, line spectra (Bessel lines for FM, 1/f slope for pink noise) and `scipy.signal.chirp` as the reference.
+
 ## [0.0.1] - 2026-11-07
 
 Sprint 1: tooling, CI, the block interface and window functions.
