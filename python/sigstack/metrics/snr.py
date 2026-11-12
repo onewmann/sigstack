@@ -1,4 +1,10 @@
-"""Signal-to-noise ratio (SNR) in decibels."""
+"""Signal-to-noise ratio (SNR) in decibels.
+
+References
+----------
+.. [OS2010] A. V. Oppenheim and R. W. Schafer, *Discrete-Time Signal Processing*, 3rd ed.,
+   Pearson, 2010, sec. 4.8.3 (SNR as the ratio of signal power to noise power, in dB).
+"""
 
 import math
 

@@ -3,6 +3,12 @@
 This module provides :func:`multitone`, :func:`chirp` and :func:`impulse`.
 Each generator returns a NumPy array and a :class:`~sigstack.signals.info.SignalInfo`
 record describing the signal's parameters and theoretical properties.
+
+References
+----------
+.. [OS2010] A. V. Oppenheim and R. W. Schafer, *Discrete-Time Signal Processing*, 3rd ed.,
+   Pearson, 2010: sec. 2.1 (unit sample and sinusoidal sequences, `multitone`, `impulse`);
+   sec. 10.3, Example 10.9 (linear chirp).
 """
 
 from __future__ import annotations

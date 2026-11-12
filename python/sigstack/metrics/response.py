@@ -141,7 +141,7 @@ def freq_response(
     References
     ----------
     Oppenheim, A. V., & Schafer, R. W. (2010). *Discrete-Time Signal
-    Processing*, 3rd ed., Pearson. Chapter 5 (frequency response).
+    Processing*, 3rd ed., Pearson, sec. 5.1 (frequency response of LTI systems).
     """
     b_arr, a_arr = _validate(b, a, n, fs)
     f = _freq_grid(n, float(fs), whole)
@@ -220,7 +220,8 @@ def group_delay(
     References
     ----------
     Oppenheim, A. V., & Schafer, R. W. (2010). *Discrete-Time Signal
-    Processing*, 3rd ed., Pearson. Chapter 5 (group delay).
+    Processing*, 3rd ed., Pearson, sec. 5.1.1 (phase and group delay);
+    S. K. Mitra (2011), *Digital Signal Processing*, 4th ed., McGraw-Hill, sec. 4.9.
     """
     b_arr, a_arr = _validate(b, a, n, fs)
     f = _freq_grid(n, float(fs), whole)
