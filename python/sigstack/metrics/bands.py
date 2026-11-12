@@ -110,7 +110,8 @@ def passband_ripple(f: ArrayLike, h: ArrayLike, band: tuple[float, float]) -> fl
 
     References
     ----------
-    Oppenheim & Schafer, *Discrete-Time Signal Processing*, 3rd ed., Ch. 7.
+    Oppenheim & Schafer, *Discrete-Time Signal Processing*, 3rd ed., sec. 7.1
+    (filter specifications).
     """
     f_arr, h_arr = _validate_inputs(f, h, band)
     mags = _select_band(f_arr, h_arr, band)
@@ -169,7 +170,8 @@ def stopband_attenuation(
 
     References
     ----------
-    Oppenheim & Schafer, *Discrete-Time Signal Processing*, 3rd ed., Ch. 7.
+    Oppenheim & Schafer, *Discrete-Time Signal Processing*, 3rd ed., sec. 7.1
+    (filter specifications).
     """
     if not np.isfinite(reference) or reference <= 0.0:
         raise ValueError("reference must be positive and finite")
