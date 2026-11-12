@@ -20,6 +20,11 @@ The design problem minimises:
     :math:`\\sum_{b} w_b \\int_{f_{1,b}}^{f_{2,b}} (A(f) - D_b(f))^2 df`
 
 where D_b(f) is linear between the desired values at the band edges.
+
+References
+----------
+.. [Mitra2011] S. K. Mitra, *Digital Signal Processing: A Computer-Based Approach*, 4th ed.,
+   McGraw-Hill, 2011, sec. 10.2.1 (least integral-squared error design of FIR filters).
 """
 
 from __future__ import annotations

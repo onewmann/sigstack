@@ -22,7 +22,7 @@ frequency of the first passband so that the magnitude response equals one there.
 References
 ----------
 .. [OS2010] A. V. Oppenheim and R. W. Schafer, *Discrete-Time Signal Processing*,
-   3rd ed., Pearson, 2010, sec. 7.5.
+   3rd ed., Pearson, 2010, sec. 7.5 (FIR design by windowing), 7.5.3 (Kaiser window method).
 """
 
 from __future__ import annotations

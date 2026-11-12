@@ -1,4 +1,11 @@
-"""Parks-McClellan (Remez exchange) FIR filter design."""
+"""Parks-McClellan (Remez exchange) FIR filter design.
+
+References
+----------
+.. [OS2010] A. V. Oppenheim and R. W. Schafer, *Discrete-Time Signal Processing*, 3rd ed.,
+   Pearson, 2010, sec. 7.7 (optimum approximations of FIR filters), 7.7.3 (Parks-McClellan
+   algorithm).
+"""
 
 from __future__ import annotations
 
