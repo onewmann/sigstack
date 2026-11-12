@@ -8,6 +8,11 @@ record describing the parameters and properties of the generated signal.
 Randomness is controlled exclusively through the ``rng`` argument, which accepts an
 integer seed, a :class:`numpy.random.Generator`, or ``None`` (for non-deterministic
 output).
+
+References
+----------
+.. [OS2010] A. V. Oppenheim and R. W. Schafer, *Discrete-Time Signal Processing*, 3rd ed.,
+   Pearson, 2010, sec. 2.10, Example 2.26 (white noise).
 """
 
 from __future__ import annotations
