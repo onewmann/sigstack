@@ -49,6 +49,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/psutil-7.2.2-py312h1b36aeb_3.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/python-3.12.16-h5f976f7_0_cpython.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/python-librt-0.16.0-py312h1b36aeb_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/linux-64/pywavelets-1.10.0-py312h1b36aeb_1.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/pyyaml-6.0.3-py312h7575043_3.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/readline-8.3-hd6e31c0_1.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/ruff-0.17.4-hf19af3b_0.conda
@@ -144,6 +145,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/win-64/psutil-7.2.2-py312he5662c2_3.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/python-3.12.16-hb12b558_0_cpython.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/python-librt-0.16.0-py312he5662c2_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/win-64/pywavelets-1.10.0-py312he5662c2_1.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/pyyaml-6.0.3-py312hcc83f31_3.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/ruff-0.17.4-h18a1a76_0.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/scipy-1.18.1-py312h8847828_2.conda
@@ -664,6 +666,23 @@ packages:
   run_exports: {}
   size: 169332
   timestamp: 1790684476183
+- conda: https://conda.anaconda.org/conda-forge/linux-64/pywavelets-1.10.0-py312h1b36aeb_1.conda
+  sha256: 908f9a8bf21a8757e26a9182b34ec1ba3b86f66ed6aa7fc29a91201033dc91b2
+  md5: 00e0ab1af3f50cf4007f268a14a226d3
+  depends:
+  - python
+  - numpy >=1.26.4,<3
+  - libgcc >=15
+  - __glibc >=2.17,<3.0.a0
+  - python_abi 3.12.* *_cp312
+  - numpy >=1.25,<3
+  license: MIT
+  license_family: MIT
+  purls:
+  - pkg:pypi/pywavelets?source=compressed-mapping
+  run_exports: {}
+  size: 3841177
+  timestamp: 1789167068469
 - conda: https://conda.anaconda.org/conda-forge/linux-64/pyyaml-6.0.3-py312h7575043_3.conda
   sha256: 727f704ad781e1414e4ec3955f94f610c45bdb54724cade4387537e5ac7f2edc
   md5: 4e48738990a952752f3bac5f98028af0
@@ -1078,7 +1097,7 @@ packages:
   license: MIT
   license_family: MIT
   purls:
-  - pkg:pypi/python-discovery?source=compressed-mapping
+  - pkg:pypi/python-discovery?source=hash-mapping
   run_exports: {}
   size: 43960
   timestamp: 1793791764996
@@ -1646,6 +1665,24 @@ packages:
   run_exports: {}
   size: 113633
   timestamp: 1790684461033
+- conda: https://conda.anaconda.org/conda-forge/win-64/pywavelets-1.10.0-py312he5662c2_1.conda
+  sha256: dcf2b5ba1086b0034bfea5770435b213fa0e75a50a9d1fe34f9335e2584ada80
+  md5: 12d199039d88c2a5ceb8132e07227e23
+  depends:
+  - python
+  - numpy >=1.26.4,<3
+  - vc >=14.3,<15
+  - vc14_runtime >=14.44.35208
+  - ucrt >=10.0.20348.0
+  - python_abi 3.12.* *_cp312
+  - numpy >=1.25,<3
+  license: MIT
+  license_family: MIT
+  purls:
+  - pkg:pypi/pywavelets?source=compressed-mapping
+  run_exports: {}
+  size: 3742319
+  timestamp: 1789167090776
 - conda: https://conda.anaconda.org/conda-forge/win-64/pyyaml-6.0.3-py312hcc83f31_3.conda
   sha256: f458bc3c294181a2d80cc96ad8eea5456506e5a297d56f6989275436f005af03
   md5: 10c6274e466aebb1349910f5924e3b56

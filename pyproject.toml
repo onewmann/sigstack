@@ -71,6 +71,11 @@ warn_unreachable = true
 module = ["scipy", "scipy.*"]
 ignore_missing_imports = true
 
+# PyWavelets ships no type hints; it is only used as a test reference (S8.1).
+[[tool.mypy.overrides]]
+module = ["pywt", "pywt.*"]
+ignore_missing_imports = true
+
 # Tests may leave helpers and fixtures unannotated.
 [[tool.mypy.overrides]]
 module = ["tests", "tests.*"]
