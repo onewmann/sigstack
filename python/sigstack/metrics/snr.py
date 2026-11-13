@@ -9,9 +9,15 @@ References
 import math
 
 import numpy as np
-from numpy.typing import ArrayLike
+from numpy.typing import ArrayLike, NDArray
 
 __all__ = ["snr_db", "snr_db_ref"]
+
+
+def _as_inexact(x: ArrayLike) -> NDArray[np.float64] | NDArray[np.complex128]:
+    """Convert to float64 (complex128 for complex input), so integer data cannot overflow."""
+    a = np.asarray(x)
+    return a.astype(np.complex128) if np.iscomplexobj(a) else a.astype(np.float64)
 
 
 def snr_db(signal: ArrayLike, noise: ArrayLike) -> float:
@@ -33,7 +39,8 @@ def snr_db(signal: ArrayLike, noise: ArrayLike) -> float:
     Parameters
     ----------
     signal : ArrayLike
-        The signal array. Can be real or complex, any dimensionality.
+        The signal array. Can be real or complex, any dimensionality. Integer input
+        (e.g. int16 PCM) is converted to float64 first, so it cannot overflow.
     noise : ArrayLike
         The noise array. Must have the same shape as `signal`.
 
@@ -51,8 +58,8 @@ def snr_db(signal: ArrayLike, noise: ArrayLike) -> float:
         or if both powers are exactly zero.
 
     """
-    sig = np.asarray(signal)
-    noi = np.asarray(noise)
+    sig = _as_inexact(signal)
+    noi = _as_inexact(noise)
 
     if sig.shape != noi.shape:
         raise ValueError(
@@ -110,8 +117,8 @@ def snr_db_ref(reference: ArrayLike, observed: ArrayLike) -> float:
     -----
     This is a common metric for evaluating signal reconstruction quality.
     """
-    ref = np.asarray(reference)
-    obs = np.asarray(observed)
+    ref = _as_inexact(reference)
+    obs = _as_inexact(observed)
 
     if ref.shape != obs.shape:
         raise ValueError(
