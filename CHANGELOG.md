@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Filter and signal metrics in `sigstack.metrics` (S2.2): `snr_db`, `snr_db_ref`, `freq_response`, `group_delay` (exact formula, `nan` where the response is zero), `passband_ripple`, `stopband_attenuation`. Validated on textbook filters with known values (moving average, first-order IIR, pure delay, Butterworth -3 dB point, Chebyshev and elliptic ripple) and against `scipy.signal.freqz` and `group_delay`.
 - Test signal generators in `sigstack.signals` (S2.1): `multitone`, `chirp` (linear, logarithmic), `impulse`, `white_noise`, `pink_noise`, `am`, `fm`. Each returns the signal and a `SignalInfo` record (frequencies, amplitudes, theoretical mean power, parameters); seeded through `rng`, complex variants via `as_complex`. Tests with exact values, line spectra (Bessel lines for FM, 1/f slope for pink noise) and `scipy.signal.chirp` as the reference.
 
 ## [0.0.1] - 2026-11-07
