@@ -17,7 +17,7 @@ import math
 import numbers
 import operator
 from collections.abc import Sequence
-from typing import Literal
+from typing import Literal, SupportsIndex, cast
 
 import numpy as np
 from numpy.typing import NDArray
@@ -95,19 +95,17 @@ def multitone(
     'multitone'
     """
     # Validate n
-    if isinstance(n, bool):
+    if isinstance(n, bool | np.bool_):
         raise TypeError(f"n must be an integer, got {type(n).__name__}")
-    if not isinstance(n, int):
-        raise TypeError(f"n must be an integer, got {type(n).__name__}")
-    if n <= 0:
-        raise ValueError(f"n must be positive, got {n}")
+    try:
+        n_val = operator.index(cast("SupportsIndex", n))
+    except TypeError:
+        raise TypeError(f"n must be an integer, got {type(n).__name__}") from None
+    if n_val <= 0:
+        raise ValueError(f"n must be positive, got {n_val}")
 
-    # Validate fs
-    if isinstance(fs, bool) or not isinstance(fs, (int, float)):
-        raise TypeError(f"fs must be a real number, got {type(fs).__name__}")
-    fs_val = float(fs)
-    if not math.isfinite(fs_val) or fs_val <= 0.0:
-        raise ValueError(f"fs must be finite and positive, got {fs}")
+    # Validate fs using the shared helper to accept NumPy integer scalars
+    fs_val = _check_finite_real("fs", fs, positive=True)
 
     # Validate freqs
     if len(freqs) == 0:
@@ -146,13 +144,13 @@ def multitone(
         phis = np.zeros(len(freqs), dtype=np.float64)
 
     # Generate signal
-    t = np.arange(n, dtype=np.float64) / fs_val
+    t = np.arange(n_val, dtype=np.float64) / fs_val
     if as_complex:
-        x = np.zeros(n, dtype=np.complex128)
+        x = np.zeros(n_val, dtype=np.complex128)
         for f, a, p in zip(freqs_arr, amps, phis, strict=True):
             x += a * np.exp(1j * (2.0 * np.pi * f * t + p))
     else:
-        x = np.zeros(n, dtype=np.float64)
+        x = np.zeros(n_val, dtype=np.float64)
         for f, a, p in zip(freqs_arr, amps, phis, strict=True):
             x += a * np.cos(2.0 * np.pi * f * t + p)
 
@@ -165,7 +163,7 @@ def multitone(
     info = SignalInfo(
         kind="multitone",
         fs=fs_val,
-        n_samples=n,
+        n_samples=n_val,
         freqs=tuple(freqs_arr.tolist()),
         amplitudes=tuple(amps.tolist()),
         power=power,
@@ -176,18 +174,20 @@ def multitone(
 
 def _check_integer(name: str, value: object, *, positive: bool = False) -> int:
     """Validate an integer scalar and return its int value."""
-    if isinstance(value, bool):
+    if isinstance(value, bool | np.bool_):
         raise TypeError(f"{name} must be an integer, got {type(value).__name__}")
-    if not isinstance(value, int):
-        raise TypeError(f"{name} must be an integer, got {type(value).__name__}")
-    if positive and value <= 0:
-        raise ValueError(f"{name} must be positive, got {value}")
-    return value
+    try:
+        result = operator.index(cast("SupportsIndex", value))
+    except TypeError:
+        raise TypeError(f"{name} must be an integer, got {type(value).__name__}") from None
+    if positive and result <= 0:
+        raise ValueError(f"{name} must be positive, got {result}")
+    return result
 
 
 def _check_finite_real(name: str, value: object, *, positive: bool = False) -> float:
     """Validate a finite real scalar and return its float value."""
-    if isinstance(value, bool):
+    if isinstance(value, bool | np.bool_):
         raise TypeError(f"{name} must be a real number, got {type(value).__name__}")
     if not isinstance(value, numbers.Real):
         raise TypeError(f"{name} must be a real number, got {type(value).__name__}")
@@ -383,10 +383,10 @@ def impulse(
     fs_val = _check_finite_real("fs", fs, positive=True)
     amplitude_val = _check_finite_real("amplitude", amplitude)
 
-    if isinstance(index, bool):
+    if isinstance(index, bool | np.bool_):
         raise TypeError(f"index must be an integer, got {type(index).__name__}")
     try:
-        index_val = operator.index(index)
+        index_val = operator.index(cast("SupportsIndex", index))
     except TypeError:
         raise TypeError(f"index must be an integer, got {type(index).__name__}") from None
     if index_val < 0 or index_val >= n_val:
