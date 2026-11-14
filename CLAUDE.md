@@ -8,9 +8,9 @@ Instructions for Claude Code in this repository.
 
 ## Ground rules
 
-- All code is written from scratch, based on textbooks and public documentation. Do not copy code from other libraries; SciPy is used as a **test reference**, not as the implementation.
+- Code is implemented from the task text, textbooks and public documentation. Code text from another library is allowed only if its licence is permissive (BSD, MIT, Apache-2.0, PSF) and its source file and licence are recorded in `NOTICE`; never from GPL, LGPL, AGPL or proprietary sources (GNU Octave, GNU Radio, MATLAB toolboxes, Numerical Recipes). SciPy and PyWavelets are **test references**, not the implementation and not runtime dependencies.
 - No code, data or parameters from any thesis or employer.
-- Do not add a dependency without asking first. Allowed so far: numpy, scipy, pytest, hypothesis, ruff, mypy, pre-commit.
+- Do not add a dependency without asking first. Allowed so far: numpy (run time); matplotlib (optional extra `plot`); scipy, pywavelets (test references); pytest, hypothesis, ruff, mypy, pre-commit (tools).
 - Never change git config (author is set by the owner). Never force-push, never push to `main` directly.
 
 ## Layout

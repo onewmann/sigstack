@@ -9,11 +9,10 @@ version = "0.0.1"
 description = "Signal processing toolkit: block-based DSP, C++ core, Monte Carlo design loop"
 readme = "README.md"
 license = "Apache-2.0"
-license-files = ["LICENSE"]
+license-files = ["LICENSE", "NOTICE"]
 requires-python = ">=3.11"
 dependencies = [
   "numpy",
-  "scipy",
 ]
 # sigstack.plots needs matplotlib (3.10+ for Artist.get_figure(root=...)); the rest does not.
 optional-dependencies = { plot = ["matplotlib>=3.10"] }
@@ -29,8 +28,8 @@ classifiers = [
 Repository = "https://github.com/onewmann/sigstack"
 
 [dependency-groups]
-# Test references only: PyWavelets (S8.1, like SciPy); matplotlib for the sigstack.plots tests.
-test = ["pytest", "hypothesis", "pywavelets", "matplotlib>=3.10"]
+# Test references only: SciPy and PyWavelets (S8.1); matplotlib for the sigstack.plots tests.
+test = ["pytest", "hypothesis", "scipy", "pywavelets", "matplotlib>=3.10"]
 
 [tool.hatch.build.targets.wheel]
 packages = ["python/sigstack"]
