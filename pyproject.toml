@@ -15,6 +15,8 @@ dependencies = [
   "numpy",
   "scipy",
 ]
+# sigstack.plots needs matplotlib (3.10+ for Artist.get_figure(root=...)); the rest does not.
+optional-dependencies = { plot = ["matplotlib>=3.10"] }
 classifiers = [
   "Development Status :: 2 - Pre-Alpha",
   "Intended Audience :: Science/Research",
@@ -27,8 +29,8 @@ classifiers = [
 Repository = "https://github.com/onewmann/sigstack"
 
 [dependency-groups]
-# PyWavelets is a test reference only (S8.1), like SciPy.
-test = ["pytest", "hypothesis", "pywavelets"]
+# Test references only: PyWavelets (S8.1, like SciPy); matplotlib for the sigstack.plots tests.
+test = ["pytest", "hypothesis", "pywavelets", "matplotlib>=3.10"]
 
 [tool.hatch.build.targets.wheel]
 packages = ["python/sigstack"]
