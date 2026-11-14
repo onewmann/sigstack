@@ -27,7 +27,8 @@ classifiers = [
 Repository = "https://github.com/onewmann/sigstack"
 
 [dependency-groups]
-test = ["pytest", "hypothesis"]
+# PyWavelets is a test reference only (S8.1), like SciPy.
+test = ["pytest", "hypothesis", "pywavelets"]
 
 [tool.hatch.build.targets.wheel]
 packages = ["python/sigstack"]
@@ -69,6 +70,11 @@ warn_unreachable = true
 # SciPy ships no type stubs; it is only used as a test reference.
 [[tool.mypy.overrides]]
 module = ["scipy", "scipy.*"]
+ignore_missing_imports = true
+
+# PyWavelets ships no type hints; it is only used as a test reference (S8.1).
+[[tool.mypy.overrides]]
+module = ["pywt", "pywt.*"]
 ignore_missing_imports = true
 
 # Tests may leave helpers and fixtures unannotated.
