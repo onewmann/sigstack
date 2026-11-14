@@ -160,8 +160,9 @@ def butter(
     Returns
     -------
     numpy.ndarray
-        Second-order sections array of shape ``(ceil(order/2), 6)`` with
-        dtype ``float64``. Each row is ``[b0, b1, b2, 1.0, a1, a2]``.
+        Second-order sections array of dtype ``float64``, shape ``(ceil(order/2), 6)``
+        for lowpass and highpass and ``(order, 6)`` for bandpass and bandstop. Each row
+        is ``[b0, b1, b2, 1.0, a1, a2]``.
 
     Raises
     ------
@@ -244,7 +245,8 @@ def cheby1(
     Returns
     -------
     numpy.ndarray
-        Second-order sections array of shape ``(ceil(order/2), 6)``.
+        Second-order sections array of shape ``(ceil(order/2), 6)`` for lowpass and
+        highpass and ``(order, 6)`` for bandpass and bandstop.
 
     Raises
     ------
@@ -329,7 +331,8 @@ def cheby2(
     Returns
     -------
     numpy.ndarray
-        Second-order sections array of shape ``(ceil(order/2), 6)``.
+        Second-order sections array of shape ``(ceil(order/2), 6)`` for lowpass and
+        highpass and ``(order, 6)`` for bandpass and bandstop.
 
     Raises
     ------
@@ -416,7 +419,8 @@ def ellip(
     Returns
     -------
     numpy.ndarray
-        Second-order sections array of shape ``(ceil(order/2), 6)``.
+        Second-order sections array of shape ``(ceil(order/2), 6)`` for lowpass and
+        highpass and ``(order, 6)`` for bandpass and bandstop.
 
     Raises
     ------

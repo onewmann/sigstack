@@ -1,4 +1,4 @@
-"""Tests for the S3.2 review fixes (pairing/ordering, dn at K, ellipap at large rs, validation).
+"""Edge cases of the IIR design: section pairing, dn at K, ellipap at large rs, validation.
 
 One test method per fix group.
 
@@ -82,7 +82,7 @@ def match_multiset(tc: unittest.TestCase, got: Any, ref: Any, rtol: float) -> No
         free.pop(i)
 
 
-class TestFixes(unittest.TestCase):
+class TestEdgeCases(unittest.TestCase):
     def test_zpk2sos_pairing_and_ordering(self) -> None:
         # B1, Jackson's rules (Oppenheim and Schafer 2010, Sec. 6.9.3, p. 452): the pole closest to
         # the unit circle takes the zero closest to it, repeated until all are paired; sections

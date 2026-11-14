@@ -1,4 +1,4 @@
-"""Tests for the second review round of S3.2 (fair pairing order, trivial zpk, non-finite inputs).
+"""Section order of zpk2sos, the trivial transfer function and non-finite inputs of the IIR design.
 
 zpk2sos serves every pole group in one pass, closest to the unit circle first (Jackson's rule 2
 for all inputs, not only for the package's own designs); the trivial transfer function is one
@@ -27,7 +27,7 @@ def section_rows(groups: list[tuple[Any, Any]], k: float) -> Any:
     return np.array(rows)
 
 
-class TestS32d(unittest.TestCase):
+class TestSectionOrder(unittest.TestCase):
     def test_zpk2sos_fair_order(self) -> None:
         # Jackson's rules for generic inputs: pole groups are served in one pass by decreasing |p|
         # (closest to the unit circle first), whatever their kind. A second-order group takes the
