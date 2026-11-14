@@ -3426,6 +3426,5 @@ packages:
   name: sigstack
   requires_dist:
   - numpy
-  - scipy
   - matplotlib>=3.10 ; extra == 'plot'
   requires_python: '>=3.11'

@@ -1,0 +1,19 @@
+sigstack
+Copyright 2026 onewmann
+
+Licensed under the Apache License, Version 2.0 (see LICENSE).
+
+Third-party code included in this distribution: none.
+
+sigstack's code is written from textbooks and public documentation. Code text from another project is
+included only if that project's licence is permissive (BSD, MIT, Apache-2.0, PSF); its source file and
+licence are then listed above. Copyleft (GPL, LGPL, AGPL) and proprietary sources are never used.
+
+Dependencies, none of them distributed with sigstack:
+- NumPy (BSD-3-Clause): run time.
+- matplotlib (PSF-based Matplotlib licence): optional, extra "plot".
+- SciPy (BSD-3-Clause) and PyWavelets (MIT): test references only.
+
+Development note: parts of the code were drafted by local language models and by Claude (Anthropic)
+from written specifications and textbooks, and checked by tests and reviews before merging. Commits
+that contain such code say so in their message trailers.
