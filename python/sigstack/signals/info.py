@@ -10,6 +10,8 @@ The record is immutable to prevent accidental modification after generation.
 from __future__ import annotations
 
 import dataclasses
+import types
+from collections.abc import Mapping
 
 
 @dataclasses.dataclass(frozen=True)
@@ -40,10 +42,11 @@ class SignalInfo:
         Theoretical mean power of the signal. For a multitone with amplitudes $A_i$,
         the power is $\sum_i A_i^2 / 2$. For white noise with variance $\sigma^2$,
         the power is $\sigma^2$.
-    params : Dict[str, float], optional
+    params : Mapping[str, float], optional
         Additional parameters specific to the signal type. For example, for a chirp
         this might contain ``"f0"`` and ``"f1"``, or for AM/FM it might contain
-        modulation indices. Defaults to an empty dictionary.
+        modulation indices. Defaults to an empty mapping. The stored value is a
+        read-only mapping; attempts to mutate it raise :class:`TypeError`.
 
     Attributes
     ----------
@@ -59,8 +62,8 @@ class SignalInfo:
         Amplitudes corresponding to ``freqs``.
     power : float
         Theoretical mean power.
-    params : Dict[str, float]
-        Additional parameters.
+    params : Mapping[str, float]
+        Additional parameters (read-only mapping).
 
     Examples
     --------
@@ -85,4 +88,8 @@ class SignalInfo:
     freqs: tuple[float, ...]
     amplitudes: tuple[float, ...]
     power: float
-    params: dict[str, float] = dataclasses.field(default_factory=dict)
+    params: Mapping[str, float] = dataclasses.field(default_factory=dict, hash=False)
+
+    def __post_init__(self) -> None:
+        """Replace params with a read-only mapping proxy copy."""
+        object.__setattr__(self, "params", types.MappingProxyType(dict(self.params)))

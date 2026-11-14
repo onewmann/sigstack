@@ -10,6 +10,7 @@ References
 from __future__ import annotations
 
 import math
+import operator
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
@@ -74,14 +75,22 @@ def remez(
         If any input fails validation.
     """
     # --- numtaps ---
-    if isinstance(numtaps, bool) or not isinstance(numtaps, int):
+    if isinstance(numtaps, (bool, np.bool_)):
         raise ValueError("numtaps must be an integer")
+    try:
+        numtaps = operator.index(numtaps)
+    except TypeError:
+        raise ValueError("numtaps must be an integer") from None
     if numtaps < 3:
         raise ValueError("numtaps must be >= 3")
 
     # --- fs ---
-    if not isinstance(fs, (int, float)) or isinstance(fs, bool):
+    if isinstance(fs, (bool, np.bool_)):
         raise ValueError("fs must be a positive finite number")
+    try:
+        fs = float(fs)
+    except (TypeError, ValueError):
+        raise ValueError("fs must be a positive finite number") from None
     if not math.isfinite(fs) or fs <= 0:
         raise ValueError("fs must be a positive finite number")
 
