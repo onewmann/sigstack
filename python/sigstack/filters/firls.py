@@ -29,6 +29,9 @@ References
 
 from __future__ import annotations
 
+import numbers
+import operator
+
 import numpy as np
 from numpy.typing import NDArray
 
@@ -72,16 +75,24 @@ def firls(
 
     """
     # Validate numtaps
-    if isinstance(numtaps, bool) or not isinstance(numtaps, int):
+    if isinstance(numtaps, (bool, np.bool_)):
         raise ValueError("numtaps must be an integer")
+    try:
+        numtaps = operator.index(numtaps)
+    except TypeError:
+        raise ValueError("numtaps must be an integer") from None
     if numtaps <= 0:
         raise ValueError("numtaps must be positive")
     if numtaps % 2 == 0:
         raise ValueError("numtaps must be odd")
 
     # Validate fs
-    if not isinstance(fs, (int, float)) or isinstance(fs, bool):
+    fs_obj: object = fs  # checked as object: NumPy scalars are numbers.Real, str and bool are not
+    if isinstance(fs_obj, (bool, np.bool_)) or not isinstance(fs_obj, numbers.Real):
         raise ValueError("fs must be a number")
+    fs = float(fs_obj)
+    if not np.isfinite(fs):
+        raise ValueError("fs must be finite")
     if fs <= 0:
         raise ValueError("fs must be positive")
 
@@ -89,6 +100,8 @@ def firls(
     bands_arr = np.asarray(bands, dtype=np.float64)
     if bands_arr.ndim != 1:
         raise ValueError("bands must be a 1-D sequence")
+    if not np.all(np.isfinite(bands_arr)):
+        raise ValueError("band edges must be finite")
     if len(bands_arr) % 2 != 0:
         raise ValueError("bands must have an even number of edges")
     if len(bands_arr) < 2:
@@ -108,6 +121,8 @@ def firls(
     desired_arr = np.asarray(desired, dtype=np.float64)
     if desired_arr.ndim != 1:
         raise ValueError("desired must be a 1-D sequence")
+    if not np.all(np.isfinite(desired_arr)):
+        raise ValueError("desired values must be finite")
     if len(desired_arr) != len(bands_arr):
         raise ValueError(
             f"desired must have the same length as bands ({len(bands_arr)}), got {len(desired_arr)}"
@@ -121,6 +136,8 @@ def firls(
         weights = np.asarray(weight, dtype=np.float64)
         if weights.ndim != 1:
             raise ValueError("weight must be a 1-D sequence")
+        if not np.all(np.isfinite(weights)):
+            raise ValueError("weights must be finite")
         if len(weights) != n_bands:
             raise ValueError(
                 f"weight must have {n_bands} values (one per band), got {len(weights)}"

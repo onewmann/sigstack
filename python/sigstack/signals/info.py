@@ -40,10 +40,11 @@ class SignalInfo:
         Theoretical mean power of the signal. For a multitone with amplitudes $A_i$,
         the power is $\sum_i A_i^2 / 2$. For white noise with variance $\sigma^2$,
         the power is $\sigma^2$.
-    params : Dict[str, float], optional
+    params : dict[str, float], optional
         Additional parameters specific to the signal type. For example, for a chirp
         this might contain ``"f0"`` and ``"f1"``, or for AM/FM it might contain
-        modulation indices. Defaults to an empty dictionary.
+        modulation indices. Defaults to an empty dictionary. The record keeps its own
+        copy, and ``params`` is not part of the hash.
 
     Attributes
     ----------
@@ -59,8 +60,8 @@ class SignalInfo:
         Amplitudes corresponding to ``freqs``.
     power : float
         Theoretical mean power.
-    params : Dict[str, float]
-        Additional parameters.
+    params : dict[str, float]
+        Additional parameters (a copy of the argument; excluded from the hash).
 
     Examples
     --------
@@ -85,4 +86,8 @@ class SignalInfo:
     freqs: tuple[float, ...]
     amplitudes: tuple[float, ...]
     power: float
-    params: dict[str, float] = dataclasses.field(default_factory=dict)
+    params: dict[str, float] = dataclasses.field(default_factory=dict, hash=False)
+
+    def __post_init__(self) -> None:
+        """Keep an own copy of params, so the caller's dict cannot change the record."""
+        object.__setattr__(self, "params", dict(self.params))
