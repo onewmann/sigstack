@@ -10,6 +10,7 @@ References
 from __future__ import annotations
 
 import math
+import numbers
 import operator
 
 import numpy as np
@@ -85,12 +86,10 @@ def remez(
         raise ValueError("numtaps must be >= 3")
 
     # --- fs ---
-    if isinstance(fs, (bool, np.bool_)):
+    fs_obj: object = fs  # checked as object: NumPy scalars are numbers.Real, str and bool are not
+    if isinstance(fs_obj, (bool, np.bool_)) or not isinstance(fs_obj, numbers.Real):
         raise ValueError("fs must be a positive finite number")
-    try:
-        fs = float(fs)
-    except (TypeError, ValueError):
-        raise ValueError("fs must be a positive finite number") from None
+    fs = float(fs_obj)
     if not math.isfinite(fs) or fs <= 0:
         raise ValueError("fs must be a positive finite number")
 
@@ -102,6 +101,8 @@ def remez(
     n_edges = len(bands_arr)
     if n_edges == 0 or n_edges % 2 != 0:
         raise ValueError("bands must have an even positive number of entries")
+    if not np.all(np.isfinite(bands_arr)):
+        raise ValueError("band edges must be finite")
 
     # Normalise so that the Nyquist frequency corresponds to 1.
     edges = bands_arr / (fs / 2.0)
@@ -120,6 +121,8 @@ def remez(
         raise ValueError(
             f"desired must have length {n_bands} (one per band), got {len(desired_arr)}"
         )
+    if not np.all(np.isfinite(desired_arr)):
+        raise ValueError("desired values must be finite")
 
     # --- weight ---
     if weight is None:
@@ -133,6 +136,8 @@ def remez(
             raise ValueError(
                 f"weight must have length {n_bands} (one per band), got {len(weight_arr)}"
             )
+        if not np.all(np.isfinite(weight_arr)):
+            raise ValueError("weights must be finite")
         if np.any(weight_arr <= 0):
             raise ValueError("all weights must be > 0")
 

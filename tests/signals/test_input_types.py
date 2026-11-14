@@ -1,4 +1,7 @@
+import copy
+import dataclasses
 import math
+import pickle
 import unittest
 from typing import Any
 
@@ -51,13 +54,12 @@ class TestSignalInfo(unittest.TestCase):
         self.assertEqual(hash(a), hash(b))
         self.assertEqual(len({a, b}), 1)
 
-    def test_params_read_only(self) -> None:
-        # frozen means frozen: the params mapping cannot be changed after construction either
+    def test_pickle_copy_asdict(self) -> None:
+        # the record stays a plain dataclass: multiprocessing and Monte Carlo runs pickle it
         info = self._info()
-        with self.assertRaises(TypeError):
-            info.params["a"] = 2.0  # type: ignore[index]
-        self.assertEqual(info.params, {"a": 1.0})
-        self.assertEqual(dict(info.params), {"a": 1.0})
+        self.assertEqual(pickle.loads(pickle.dumps(info)), info)
+        self.assertEqual(copy.deepcopy(info), info)
+        self.assertEqual(dataclasses.asdict(info)["params"], {"a": 1.0})
 
     def test_caller_dict_is_copied(self) -> None:
         p = {"a": 1.0}

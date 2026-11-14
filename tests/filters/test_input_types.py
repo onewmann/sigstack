@@ -38,6 +38,30 @@ class TestNumpyScalars(unittest.TestCase):
                     firls(21, BANDS, DESIRED, fs=value)
 
 
+class TestStringsRejected(unittest.TestCase):
+    def test_fs_must_be_a_number(self) -> None:
+        # float("2") would succeed; a string is still not a sample rate
+        bad: Any = "2"
+        with self.assertRaises(ValueError):
+            firls(11, BANDS, DESIRED, fs=bad)
+        with self.assertRaises(ValueError):
+            remez(11, BANDS, [1.0, 0.0], fs=bad)
+
+
+class TestRemezNonFinite(unittest.TestCase):
+    def test_non_finite_inputs_rejected(self) -> None:
+        # same rule as firls: NaN or inf would give NaN taps or an obscure error
+        for bad in (np.nan, np.inf):
+            cases = [
+                ("bands", lambda b=bad: remez(21, [0.0, 0.3, b, 1.0], [1.0, 0.0])),
+                ("desired", lambda b=bad: remez(21, BANDS, [1.0, b])),
+                ("weight", lambda b=bad: remez(21, BANDS, [1.0, 0.0], weight=[1.0, b])),
+            ]
+            for name, call in cases:
+                with self.subTest(arg=name, value=bad), self.assertRaises(ValueError):
+                    call()
+
+
 class TestFirlsNonFinite(unittest.TestCase):
     def test_non_finite_inputs_rejected(self) -> None:
         # NaN or inf in bands, desired, weight or fs used to give NaN coefficients

@@ -29,6 +29,7 @@ References
 
 from __future__ import annotations
 
+import numbers
 import operator
 
 import numpy as np
@@ -86,12 +87,10 @@ def firls(
         raise ValueError("numtaps must be odd")
 
     # Validate fs
-    if isinstance(fs, (bool, np.bool_)):
+    fs_obj: object = fs  # checked as object: NumPy scalars are numbers.Real, str and bool are not
+    if isinstance(fs_obj, (bool, np.bool_)) or not isinstance(fs_obj, numbers.Real):
         raise ValueError("fs must be a number")
-    try:
-        fs = float(fs)
-    except (TypeError, ValueError):
-        raise ValueError("fs must be a number") from None
+    fs = float(fs_obj)
     if not np.isfinite(fs):
         raise ValueError("fs must be finite")
     if fs <= 0:
