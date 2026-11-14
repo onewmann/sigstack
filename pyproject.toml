@@ -27,7 +27,8 @@ classifiers = [
 Repository = "https://github.com/onewmann/sigstack"
 
 [dependency-groups]
-test = ["pytest", "hypothesis"]
+# PyWavelets is a test reference only (S8.1), like SciPy.
+test = ["pytest", "hypothesis", "pywavelets"]
 
 [tool.hatch.build.targets.wheel]
 packages = ["python/sigstack"]
