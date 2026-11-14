@@ -10,6 +10,8 @@ References
 from __future__ import annotations
 
 import math
+import numbers
+import operator
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
@@ -74,14 +76,20 @@ def remez(
         If any input fails validation.
     """
     # --- numtaps ---
-    if isinstance(numtaps, bool) or not isinstance(numtaps, int):
+    if isinstance(numtaps, (bool, np.bool_)):
         raise ValueError("numtaps must be an integer")
+    try:
+        numtaps = operator.index(numtaps)
+    except TypeError:
+        raise ValueError("numtaps must be an integer") from None
     if numtaps < 3:
         raise ValueError("numtaps must be >= 3")
 
     # --- fs ---
-    if not isinstance(fs, (int, float)) or isinstance(fs, bool):
+    fs_obj: object = fs  # checked as object: NumPy scalars are numbers.Real, str and bool are not
+    if isinstance(fs_obj, (bool, np.bool_)) or not isinstance(fs_obj, numbers.Real):
         raise ValueError("fs must be a positive finite number")
+    fs = float(fs_obj)
     if not math.isfinite(fs) or fs <= 0:
         raise ValueError("fs must be a positive finite number")
 
@@ -93,6 +101,8 @@ def remez(
     n_edges = len(bands_arr)
     if n_edges == 0 or n_edges % 2 != 0:
         raise ValueError("bands must have an even positive number of entries")
+    if not np.all(np.isfinite(bands_arr)):
+        raise ValueError("band edges must be finite")
 
     # Normalise so that the Nyquist frequency corresponds to 1.
     edges = bands_arr / (fs / 2.0)
@@ -111,6 +121,8 @@ def remez(
         raise ValueError(
             f"desired must have length {n_bands} (one per band), got {len(desired_arr)}"
         )
+    if not np.all(np.isfinite(desired_arr)):
+        raise ValueError("desired values must be finite")
 
     # --- weight ---
     if weight is None:
@@ -124,6 +136,8 @@ def remez(
             raise ValueError(
                 f"weight must have length {n_bands} (one per band), got {len(weight_arr)}"
             )
+        if not np.all(np.isfinite(weight_arr)):
+            raise ValueError("weights must be finite")
         if np.any(weight_arr <= 0):
             raise ValueError("all weights must be > 0")
 
