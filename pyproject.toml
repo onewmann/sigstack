@@ -15,8 +15,8 @@ dependencies = [
   "numpy",
   "scipy",
 ]
-# sigstack.plots needs matplotlib; the rest of the package does not.
-optional-dependencies = { plot = ["matplotlib>=3.9"] }
+# sigstack.plots needs matplotlib (3.10+ for Artist.get_figure(root=...)); the rest does not.
+optional-dependencies = { plot = ["matplotlib>=3.10"] }
 classifiers = [
   "Development Status :: 2 - Pre-Alpha",
   "Intended Audience :: Science/Research",
@@ -29,7 +29,8 @@ classifiers = [
 Repository = "https://github.com/onewmann/sigstack"
 
 [dependency-groups]
-test = ["pytest", "hypothesis"]
+# matplotlib for the sigstack.plots tests.
+test = ["pytest", "hypothesis", "matplotlib>=3.10"]
 
 [tool.hatch.build.targets.wheel]
 packages = ["python/sigstack"]

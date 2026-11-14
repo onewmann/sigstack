@@ -3390,5 +3390,5 @@ packages:
   requires_dist:
   - numpy
   - scipy
-  - matplotlib>=3.9 ; extra == 'plot'
+  - matplotlib>=3.10 ; extra == 'plot'
   requires_python: '>=3.11'

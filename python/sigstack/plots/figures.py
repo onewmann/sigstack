@@ -31,7 +31,9 @@ def plot_response(
     w : array_like
         Frequency axis (rad/sample or Hz).
     h : array_like
-        Complex frequency response values.
+        Complex frequency response values. The magnitude is floored at 1e-12
+        (-240 dB) so that zeros of the response stay finite; NaN values are drawn
+        as gaps.
     hz : bool, optional
         If True, label x-axis as Hz. Default is False.
     unwrap : bool, optional
@@ -105,7 +107,8 @@ def plot_spectrogram(
     s : array_like
         Power values, shape (len(f), len(t)).
     db : bool, optional
-        If True, plot in dB. Default is True.
+        If True, plot 10*log10(power) in dB, with zero power floored at 1e-30
+        (-300 dB). Default is True.
     title : str, optional
         Title for the plot.
     ax : Axes, optional
@@ -186,7 +189,8 @@ def plot_band_energies(
     energies : array_like
         Energy values for each band.
     db : bool, optional
-        If True, plot in dB. Default is False.
+        If True, plot 10*log10(energy) in dB, with zero energy floored at 1e-30
+        (-300 dB). Default is False.
     labels : Sequence[str], optional
         Labels for the bands.
     title : str, optional
