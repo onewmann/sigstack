@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import math
+import numbers
 
 import numpy as np
 from numpy.typing import NDArray
@@ -79,8 +80,9 @@ def _validate(
     ------
     ValueError
         If ``order < 1``, if ``btype`` is not recognised, if any of ``rp``,
-        ``rs`` or ``fs`` is non-finite, if ``fs <= 0``, if any element of
-        ``wn`` is non-finite, or if the ``wn`` edges are out of range.
+        ``rs``, ``fs`` or ``wn`` is not a real number (bool, str and complex
+        values included) or is non-finite, if ``fs <= 0``, or if the ``wn`` edges
+        are out of range.
     """
     order = _check_order(order)
     if order < 1:
@@ -88,13 +90,23 @@ def _validate(
     if btype not in ("low", "high", "band", "stop"):
         raise ValueError("btype must be 'low', 'high', 'band' or 'stop'")
 
-    for name, value in (("rp", rp), ("rs", rs), ("fs", fs)):
-        if value is not None and not math.isfinite(value):
+    for name, given in (("rp", rp), ("rs", rs), ("fs", fs)):
+        obj: object = (
+            given  # checked as object: NumPy scalars are numbers.Real, str and bool are not
+        )
+        if obj is None:
+            continue
+        if isinstance(obj, (bool, np.bool_)) or not isinstance(obj, numbers.Real):
+            raise ValueError(f"{name} must be a real number, got {type(obj).__name__}")
+        if not math.isfinite(obj):
             raise ValueError(f"{name} must be finite")
     if fs is not None and fs <= 0:
         raise ValueError("fs must be > 0")
 
-    wn_arr = np.asarray(wn, dtype=np.float64)
+    wn_raw = np.asarray(wn)
+    if wn_raw.dtype.kind not in "iuf":  # rejects str, bool, complex and object input
+        raise ValueError(f"Wn must be real numbers, got dtype {wn_raw.dtype}")
+    wn_arr = wn_raw.astype(np.float64)
     if not np.all(np.isfinite(wn_arr)):
         raise ValueError("Wn must be finite")
 
