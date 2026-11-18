@@ -118,6 +118,9 @@ def multitone(
     else:
         if not (np.all(freqs_arr > 0.0) and np.all(freqs_arr < nyquist)):
             raise ValueError(f"all frequencies must satisfy 0 < f < {nyquist} for real signals")
+    if len(np.unique(freqs_arr)) != len(freqs_arr):
+        # the closed-form power sum(A^2)/2 (or sum(A^2)) holds only for distinct tones
+        raise ValueError("frequencies must be distinct")
 
     # Validate amplitudes
     if amplitudes is None:
@@ -227,7 +230,9 @@ def chirp(
        2\pi \frac{f_0 T}{\ln(f_1/f_0)}
        \left[\left(\frac{f_1}{f_0}\right)^{t[k]/T} - 1\right] + \phi.
 
-    The output is
+    Here :math:`t[k] = k / f_s` and :math:`T = n / f_s`: the sweep reaches :math:`f_1` at
+    :math:`t = T`, one sample period after the last sample :math:`t[n-1] = (n-1)/f_s` (the
+    convention of ``scipy.signal.chirp`` with ``t1 = n / fs``). The output is
 
     .. math::
 
@@ -250,7 +255,7 @@ def chirp(
     f0 : float
         Start frequency in Hz. Must be finite.
     f1 : float
-        End frequency in Hz. Must be finite.
+        End frequency in Hz, reached at ``t = n / fs``. Must be finite.
     amplitude : float, default 1.0
         Signal amplitude. Must be finite.
     phase : float, default 0.0
