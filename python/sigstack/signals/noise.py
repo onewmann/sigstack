@@ -13,6 +13,9 @@ References
 ----------
 .. [OS2010] A. V. Oppenheim and R. W. Schafer, *Discrete-Time Signal Processing*, 3rd ed.,
    Pearson, 2010, sec. 2.10, Example 2.26 (white noise).
+.. [Kasdin1995] N. J. Kasdin, "Discrete simulation of colored noise and stochastic processes
+   and 1/f^alpha power law noise generation", Proc. IEEE, vol. 83, no. 5, pp. 802-827, 1995
+   (`pink_noise`).
 """
 
 from __future__ import annotations

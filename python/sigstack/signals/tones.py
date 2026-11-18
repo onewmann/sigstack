@@ -9,6 +9,9 @@ References
 .. [OS2010] A. V. Oppenheim and R. W. Schafer, *Discrete-Time Signal Processing*, 3rd ed.,
    Pearson, 2010: sec. 2.1 (unit sample and sinusoidal sequences, `multitone`, `impulse`);
    sec. 10.3, Example 10.9 (linear chirp).
+.. [Farina2000] A. Farina, "Simultaneous measurement of impulse response and distortion with a
+   swept-sine technique", 108th AES Convention, Paris, February 2000, paper 5093 (exponential
+   sine sweep: the logarithmic `chirp`).
 """
 
 from __future__ import annotations
@@ -86,7 +89,7 @@ def multitone(
         If ``n`` is not an integer or ``fs`` is not a real number.
     ValueError
         If ``n <= 0``, ``fs`` is not positive, ``freqs`` is empty, frequencies are
-        out of range, or ``amplitudes``/``phases`` have wrong length.
+        out of range or not distinct, or ``amplitudes``/``phases`` have wrong length.
 
     Examples
     --------
@@ -118,6 +121,10 @@ def multitone(
     else:
         if not (np.all(freqs_arr > 0.0) and np.all(freqs_arr < nyquist)):
             raise ValueError(f"all frequencies must satisfy 0 < f < {nyquist} for real signals")
+    if len(np.unique(freqs_arr)) != len(freqs_arr):
+        # the theoretical (long-run) power sum(A^2)/2 (or sum(A^2)) assumes distinct frequencies;
+        # over n samples, tones closer than about fs / n still deviate from it (by definition)
+        raise ValueError("frequencies must be distinct")
 
     # Validate amplitudes
     if amplitudes is None:
@@ -227,7 +234,9 @@ def chirp(
        2\pi \frac{f_0 T}{\ln(f_1/f_0)}
        \left[\left(\frac{f_1}{f_0}\right)^{t[k]/T} - 1\right] + \phi.
 
-    The output is
+    Here :math:`t[k] = k / f_s` and :math:`T = n / f_s`: the sweep reaches :math:`f_1` at
+    :math:`t = T`, one sample period after the last sample :math:`t[n-1] = (n-1)/f_s` (the
+    convention of ``scipy.signal.chirp`` with ``t1 = n / fs``). The output is
 
     .. math::
 
@@ -250,7 +259,7 @@ def chirp(
     f0 : float
         Start frequency in Hz. Must be finite.
     f1 : float
-        End frequency in Hz. Must be finite.
+        End frequency in Hz, reached at ``t = n / fs``. Must be finite.
     amplitude : float, default 1.0
         Signal amplitude. Must be finite.
     phase : float, default 0.0
