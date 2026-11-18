@@ -203,3 +203,61 @@ class TestReviewFixes(unittest.TestCase):
         basis = best_basis(pruned)
         self.assertTrue(set(basis) <= set(pruned))
         self.assertEqual(sum(2 ** (2 - len(p)) for p in basis), 4)
+
+
+class TestRecheckFixes(unittest.TestCase):
+    def test_odd_length_costs_stay_non_negative(self) -> None:
+        # odd node lengths are padded, so the tree is not orthonormal and energy grows with depth;
+        # best_basis normalises by the largest level energy, so every Shannon cost stays >= 0
+        x = np.zeros(37)
+        x[-1] = 1.0
+        nodes = wp_decompose(x, "haar", level=3)
+        level_energy: dict[int, float] = {}
+        for p, c in nodes.items():
+            level_energy[len(p)] = level_energy.get(len(p), 0.0) + float(c @ c)
+        norm = max(level_energy.values())
+        self.assertGreater(norm, float(x @ x))  # energy really grows here
+        costs = {p: wp_cost(c, energy=norm) for p, c in nodes.items()}
+        self.assertTrue(all(v >= 0.0 for v in costs.values()))
+        basis = best_basis(nodes)
+        self.assertEqual(sum(2 ** (3 - len(p)) for p in basis), 8)
+        self.assertLessEqual(sum(costs[p] for p in basis), costs[""] + 1e-12)
+
+    def test_non_finite_callable_cost(self) -> None:
+        nodes = wp_decompose(np.arange(8.0), "haar", level=3)
+        for value in (float("nan"), float("inf"), float("-inf")):
+
+            def bad_cost(c: Any, v: float = value) -> float:
+                return v
+
+            with self.subTest(value=value), self.assertRaises(ValueError):
+                best_basis(nodes, cost=bad_cost)
+            with self.subTest(value=value), self.assertRaises(ValueError):
+                wp_cost(np.ones(3), cost=bad_cost)
+
+    def test_bad_keys(self) -> None:
+        nodes = wp_decompose(np.random.default_rng(5).standard_normal(16), "haar", level=2)
+        tuple_keys: Any = {("a",): nodes["a"], ("d",): nodes["d"]}
+        deep = wp_decompose(np.random.default_rng(6).standard_normal(16), "haar", level=3)
+        with self.assertRaises(ValueError):
+            wp_reconstruct(tuple_keys, "haar", 16)
+        bad_trees = [
+            {**nodes, "aA": nodes["aa"]},  # invalid letter
+            {p: deep[p] for p in ("", "a", "d", "aaa", "aad")},  # orphans: no "aa"
+        ]
+        for tree in bad_trees:
+            with self.subTest(keys=sorted(tree)), self.assertRaises(ValueError):
+                best_basis(tree)
+
+    def test_frequency_band_closed_form(self) -> None:
+        # the Gray-code index equals the position in wp_frequency_order for every path up to level 8
+        for level in range(9):
+            width = 1.0 / 2**level
+            for i, path in enumerate(wp_frequency_order(level)):
+                self.assertEqual(wp_frequency_band(path), (i * width, (i + 1) * width))
+        deep = "da" * 20  # 40 letters: 2**40 paths would not fit into memory
+        lo, hi = wp_frequency_band(deep)
+        plo, phi = wp_frequency_band(deep[:-1])
+        self.assertTrue(plo <= lo < hi <= phi)
+        fs: Any = np.array(100.0)
+        self.assertEqual(wp_frequency_band("d", fs=fs), (25.0, 50.0))

@@ -4,6 +4,10 @@ This module implements the full wavelet packet tree (Coifman-Wickerhauser)
 for orthogonal wavelets using only NumPy and the existing
 :meth:`sigstack.wavelets.dwt` / :meth:`sigstack.wavelets.idwt` primitives.
 
+The transform is orthonormal, so energy is preserved at every level and in
+every basis, in mode ``"periodization"`` when the signal length is divisible by
+``2**level``.
+
 Public API
 ----------
 * :func:`wp_decompose` - full packet tree decomposition
@@ -25,6 +29,7 @@ References
 
 from __future__ import annotations
 
+import math
 import numbers
 import operator
 from collections.abc import Callable, Mapping
@@ -134,7 +139,10 @@ def _sibling(path: str) -> str:
 
 
 def _validate_path_chars(path: str) -> None:
-    """Raise ``ValueError`` if *path* contains characters other than 'a'/'d'."""
+    """Raise ``ValueError`` if *path* is not a string of the characters 'a'/'d'."""
+    obj: object = path  # keys of a user mapping can be anything
+    if not isinstance(obj, str):
+        raise ValueError(f"path must be a string of 'a' and 'd', got {type(obj).__name__}")
     for ch in path:
         if ch not in ("a", "d"):
             raise ValueError(f"Invalid character {ch!r} in path {path!r}")
@@ -270,16 +278,20 @@ def wp_frequency_band(
     """
     _validate_path_chars(path)
     fs_obj: object = fs  # checked as object: NumPy scalars are numbers.Real, str and bool are not
+    if isinstance(fs_obj, np.ndarray) and fs_obj.ndim == 0 and fs_obj.dtype.kind in "iuf":
+        fs_obj = fs_obj.item()  # a 0-d numeric array is a scalar
     if isinstance(fs_obj, (bool, np.bool_)) or not isinstance(fs_obj, numbers.Real):
         raise ValueError(f"fs must be a real number, got {type(fs_obj).__name__}")
     fs_val = float(fs_obj)
     if not np.isfinite(fs_val) or fs_val <= 0.0:
         raise ValueError(f"fs must be a finite positive number, got {fs}")
 
-    order = wp_frequency_order(len(path))
-    if path not in order:
-        raise ValueError(f"Path {path!r} is not in frequency order at level {len(path)}")
-    i = order.index(path)
+    # index in wp_frequency_order(len(path)) without building the level (2**len(path) paths):
+    # the children of the node at index i sit at 2i and 2i + 1, in the order (a, d) for an even i
+    # and (d, a) for an odd i
+    i = 0
+    for ch in path:
+        i = 2 * i + ((1 if ch == "d" else 0) ^ (i & 1))
     width = (fs_val / 2.0) / (2 ** len(path))
     return (i * width, (i + 1) * width)
 
@@ -406,7 +418,10 @@ def wp_cost(
     arr = _to_float64_1d(c)
 
     if callable(cost):
-        return float(cost(arr))
+        value = float(cost(arr))
+        if not math.isfinite(value):
+            raise ValueError(f"the cost function returned a non-finite value: {value}")
+        return value
 
     if cost == "shannon":
         if energy is None:
@@ -455,8 +470,18 @@ def best_basis(
     Raises
     ------
     ValueError
-        If *nodes* is missing the root, or any non-root path's sibling is
-        missing.
+        If *nodes* is missing the root, a key is not a string of 'a' and 'd', a
+        non-root path's sibling or parent is missing, or a callable cost returns a
+        non-finite value.
+
+    Notes
+    -----
+    The Shannon cost of every node is normalised by the largest energy of a tree
+    level. In mode ``"periodization"`` with a signal length divisible by
+    ``2**level`` the tree is orthonormal: every level holds the signal energy, so
+    this is the root energy and the costs are exactly additive. Otherwise (odd node
+    lengths are padded, ``"symmetric"`` extends the signal) energy grows with depth;
+    the largest level energy keeps every cost non-negative.
     """
     if "" not in nodes:
         raise ValueError("nodes must contain the root path ''")
@@ -464,24 +489,31 @@ def best_basis(
     # Validate that for every non-leaf node, both children exist
     all_paths = list(nodes.keys())
     for p in all_paths:
+        _validate_path_chars(p)
         if len(p) == 0:
             continue
         s = _sibling(p)
         if s not in nodes:
             raise ValueError(f"Sibling {s!r} of path {p!r} is missing")
+        if p[:-1] not in nodes:
+            raise ValueError(f"Parent {p[:-1]!r} of path {p!r} is missing")
 
     # Compute total energy at root
-    root_arr = _to_float64_1d(nodes[""])
-    root_energy = float(np.sum(root_arr * root_arr))
+    # Shannon normaliser: the largest energy of a tree level. For an orthonormal tree
+    # (periodization, length divisible by 2**level) every level holds the root energy; otherwise
+    # (odd node lengths are padded, symmetric mode extends) energy grows with depth, and the
+    # largest level energy keeps every q <= 1, so the costs stay >= 0 and remain additive.
+    level_energy: dict[int, float] = {}
+    for p in all_paths:
+        arr = _to_float64_1d(nodes[p])
+        level_energy[len(p)] = level_energy.get(len(p), 0.0) + float(np.sum(arr * arr))
+    norm_energy = max(level_energy.values())
 
     def compute_cost(p: str) -> float:
         arr = _to_float64_1d(nodes[p])
-        if callable(cost):
-            return float(cost(arr))
-        elif cost == "shannon":
-            return wp_cost(arr, "shannon", energy=root_energy)
-        else:
-            return wp_cost(arr, cost)
+        if cost == "shannon":
+            return wp_cost(arr, "shannon", energy=norm_energy)
+        return wp_cost(arr, cost)  # a callable is checked there for finite values
 
     # Bottom-up best basis search
     def solve(p: str) -> tuple[list[str], float]:
