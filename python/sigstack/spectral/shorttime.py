@@ -13,15 +13,17 @@ and frequency bin :math:`k` are
 
 .. math::
 
-    Z[k, r] = \frac{1}{\sum_m w[m]} \sum_{m=0}^{N-1} x[rR - h + m]\, w[m]\,
+    Z[k, r] = \frac{1}{|\sum_m w[m]|} \sum_{m=0}^{N-1} x[rR - h + m]\, w[m]\,
     e^{-j 2 \pi k m / N_\mathrm{fft}},
 
 with :math:`x[n] = 0` outside the signal. This samples the time-dependent Fourier
 transform [OS2010]_ at :math:`n = rR - h` and :math:`\lambda = 2 \pi k / N_\mathrm{fft}`,
 so that frame :math:`r` is centred on sample :math:`rR`. The factor
-:math:`1 / \sum_m w[m]` makes a cosine of amplitude :math:`A` at a bin centre appear
-with :math:`|Z| = A/2`. The layout (zero padding, frame count, frequency and time axes)
-matches ``scipy.signal.stft`` with its default ``boundary="zeros"`` and ``padded=True``.
+:math:`1 / |\sum_m w[m]|` makes a cosine of amplitude :math:`A` at a bin centre appear
+with :math:`|Z| = A/2` (with :math:`|Z| = A` at DC and at the Nyquist frequency, where the
+two exponentials of the cosine fall into the same bin). Layout and scaling (zero padding,
+frame count, frequency and time axes, the factor) match ``scipy.signal.stft`` with its
+defaults ``boundary="zeros"``, ``padded=True`` and ``scaling="spectrum"``.
 
 Reconstruction
 --------------
@@ -32,8 +34,9 @@ least-squares weighted overlap-add of Griffin and Lim [GL1984]_:
 
     \hat{x}[n] = \frac{\sum_r w[n - rR + h]\, y_r[n - rR + h]}{\sum_r w^2[n - rR + h]},
 
-where :math:`y_r` is the inverse FFT of frame :math:`r`. The denominator must not vanish:
-this is the NOLA condition. Without modification of :math:`Z` the reconstruction is
+where :math:`y_r` is the inverse FFT of frame :math:`r`. The denominator must not vanish
+at any returned sample, including the first and last ones, which fewer frames cover: this
+is the NOLA condition. Without modification of :math:`Z` the reconstruction is then
 exact. Plain overlap-add without the denominator reconstructs the signal up to a
 constant gain exactly when the window satisfies COLA, O&S eq. (10.47).
 
@@ -169,7 +172,8 @@ def stft(
         Sampling frequency; it only scales the frequency and time axes.
     window : str or array_like, default "hann"
         Window name for :func:`sigstack.core.get_window` (periodic window) or a
-        1-D array of length ``nperseg``. Its sum must not be zero.
+        1-D array of length ``nperseg``. Its sum must not be zero. Windows with
+        parameters are passed as arrays, e.g. ``get_window("kaiser", nperseg, beta=8.0)``.
     nperseg : int, default 256
         Frame length :math:`N \ge 1`.
     hop : int, optional
@@ -187,17 +191,18 @@ def stft(
         Frame centre times ``arange(K) * hop / fs``.
     Z : numpy.ndarray
         ``complex128`` array of shape ``x.shape[:-1] + (len(f), K)``. A cosine of
-        amplitude :math:`A` at a bin centre gives :math:`|Z| = A/2`.
+        amplitude :math:`A` at a bin centre gives :math:`|Z| = A/2` (:math:`A` at DC
+        and Nyquist).
 
     Raises
     ------
     ValueError
         If ``x`` is not numeric, has no samples or contains non-finite values; if
-        the window is invalid or sums to zero; if ``fs`` is not finite and positive;
-        if an integer parameter is out of range.
+        the window is invalid or sums to zero; if ``fs`` is not finite and positive
+        (or so small that ``1 / fs`` overflows); if an integer parameter is out of range.
     TypeError
-        If ``fs`` is not a real number or ``nperseg``, ``hop`` or ``nfft`` is not an
-        integer.
+        If ``fs`` is not a real number, ``nperseg``, ``hop`` or ``nfft`` is not an
+        integer, or a window name needs parameters (``"kaiser"``).
     """
     arr = np.asarray(x)
     if arr.dtype.kind not in "biufc":
@@ -209,11 +214,13 @@ def stft(
     if not np.all(np.isfinite(data)):
         raise ValueError("x must contain only finite values")
     rate = _real("fs", fs)
+    if not math.isfinite(1.0 / rate):
+        raise ValueError(f"fs is too small, 1 / fs overflows: {fs!r}")
     nps = _int("nperseg", nperseg, minimum=1)
     step = _hop(nps, hop)
     nf = _nfft(nps, nfft)
     w = _window(window, nps)
-    wsum = float(np.sum(w))
+    wsum = abs(float(np.sum(w)))
     if wsum == 0.0:
         raise ValueError("window must not sum to zero")
 
@@ -248,10 +255,11 @@ def istft(
     r"""Inverse short-time Fourier transform by weighted overlap-add.
 
     Inverts :func:`stft` when called with the same ``window``, ``nperseg``, ``hop``
-    and ``nfft``: each frame is multiplied by :math:`\sum_m w[m]`, inverted with an
+    and ``nfft``: each frame is multiplied by :math:`|\sum_m w[m]|`, inverted with an
     inverse FFT of length ``nfft`` and cut to ``nperseg`` samples, and the frames are
     combined by the weighted overlap-add of the module docstring. The ``nperseg // 2``
-    padding samples are removed at both ends.
+    padding samples are removed at both ends. (``scipy.signal.istft`` multiplies by the
+    signed sum instead and returns ``-x`` for a window with a negative sum.)
 
     Parameters
     ----------
@@ -259,8 +267,10 @@ def istft(
         Spectrum of shape ``(..., n_freq, K)`` as returned by :func:`stft`, with
         ``n_freq = nfft // 2 + 1`` if ``onesided`` else ``nfft``, and ``K >= 1``.
     window : str or array_like, default "hann"
-        The analysis window (name or 1-D array of length ``nperseg``). Window and
-        hop must satisfy NOLA (:func:`check_nola`).
+        The analysis window (name or 1-D array of length ``nperseg``). At every
+        returned sample, the squared windows of the frames covering it must sum to
+        more than ``1e-10 * max(w**2)`` (NOLA, relative to the window scale and
+        including the edges); :func:`check_nola` tests the periodic interior only.
     nperseg : int, default 256
         Frame length.
     hop : int, optional
@@ -286,7 +296,7 @@ def istft(
     ValueError
         If ``z`` is not numeric, has fewer than two axes, no frames, the wrong number
         of frequencies or non-finite values; if the window is invalid, sums to zero
-        or violates NOLA for ``hop``; if an integer parameter is out of range.
+        or violates NOLA at a returned sample; if an integer parameter is out of range.
     TypeError
         If ``onesided`` is not a bool or ``nperseg``, ``hop``, ``nfft`` or ``n`` is
         not an integer.
@@ -308,28 +318,31 @@ def istft(
     expected = nf // 2 + 1 if one else nf
     if arr.shape[-2] != expected:
         raise ValueError(f"z must have {expected} frequencies on axis -2, got {arr.shape[-2]}")
-    wsum = float(np.sum(w))
-    if wsum == 0.0 or not check_nola(w, nps, step):
-        raise ValueError("window and hop must satisfy NOLA (and the window must not sum to zero)")
+    wsum = abs(float(np.sum(w)))
+    if wsum == 0.0:
+        raise ValueError("window must not sum to zero")
+    n_frames = arr.shape[-1]
+    total = (n_frames - 1) * step + nps
+    half = nps // 2
+    full = total - 2 * half
+    count = full if n is None else _int("n", n, minimum=1)
+    if count > full:
+        raise ValueError(f"n must be <= {full}, got {count}")
+    norm = np.zeros(total)
+    for k in range(n_frames):
+        norm[k * step : k * step + nps] += w * w
+    kept = norm[half : half + count]
+    if not np.all(kept > 1e-10 * float(np.max(w * w))):
+        raise ValueError(
+            "window and hop violate NOLA: a returned sample is covered by no nonzero window value"
+        )
 
     spec = arr.astype(np.complex128) * wsum
     inv = np.fft.irfft(spec, n=nf, axis=-2) if one else np.fft.ifft(spec, n=nf, axis=-2)
-    n_frames = arr.shape[-1]
-    total = (n_frames - 1) * step + nps
     y = np.zeros((*arr.shape[:-2], total), dtype=np.float64 if one else np.complex128)
-    norm = np.zeros(total)
     for k in range(n_frames):
         y[..., k * step : k * step + nps] += inv[..., :nps, k] * w
-        norm[k * step : k * step + nps] += w * w
-    y /= np.where(norm > 1e-10, norm, 1.0)
-    half = nps // 2
-    y = y[..., half : total - half]
-    if n is None:
-        return y
-    count = _int("n", n, minimum=1)
-    if count > y.shape[-1]:
-        raise ValueError(f"n must be <= {y.shape[-1]}, got {count}")
-    return y[..., :count]
+    return np.ascontiguousarray(y[..., half : half + count] / kept)
 
 
 def check_cola(
@@ -353,7 +366,9 @@ def check_cola(
     hop : int
         Hop :math:`1 \le R \le N`.
     tol : float, default 1e-10
-        Absolute tolerance, finite and > 0.
+        Absolute tolerance, finite and > 0, as in ``scipy.signal.check_COLA``; it
+        depends on the window scale, so scale it for windows not normalised to a
+        peak of about 1.
 
     Returns
     -------
@@ -383,7 +398,7 @@ def check_nola(
 
     NOLA holds if the squared window shifted by multiples of the hop is nonzero
     everywhere, :math:`\sum_r w^2[n - rR] > 0`; it is the condition for the weighted
-    overlap-add inverse :func:`istft`. Computed over one period:
+    overlap-add inverse :func:`istft` away from the signal ends. Computed over one period:
     :math:`\min_j \sum_{k \ge 0} w^2[j + kR] >` ``tol`` for :math:`0 \le j < R`.
 
     Parameters
@@ -396,7 +411,9 @@ def check_nola(
     hop : int
         Hop :math:`1 \le R \le N`.
     tol : float, default 1e-10
-        Absolute tolerance, finite and > 0.
+        Absolute tolerance, finite and > 0, as in ``scipy.signal.check_NOLA``; it
+        depends on the window scale. :func:`istft` uses its own relative threshold
+        and also checks the edges.
 
     Returns
     -------

@@ -342,6 +342,120 @@ class TestValidation(unittest.TestCase):
                 check_cola("hann", 8, 4, tol=tol)
 
 
+class TestReviewFixes(unittest.TestCase):
+    """Cases from the independent review of the first version (2026-11-18)."""
+
+    def test_edge_nola_violation_raises(self) -> None:
+        # passes the periodic NOLA check, but the first returned samples lie under
+        # zero window values only: istft must refuse instead of returning zeros
+        w = np.array([0, 0, 0, 0, 0, 0, 1.0, 1.0])
+        self.assertTrue(check_nola(w, 8, 2))
+        _, _, z = stft(np.arange(1.0, 21.0), window=w, nperseg=8, hop=2)
+        with self.assertRaises(ValueError):
+            istft(z, window=w, nperseg=8, hop=2, n=20)
+
+    def test_negative_window_sum_matches_scipy(self) -> None:
+        # SciPy scales by 1 / |sum(w)|; a window with a negative sum must not flip Z
+        w = np.array([-1.0, -2.0, -1.0, -2.0])
+        x = np.arange(8.0)
+        _, _, z = stft(x, window=w, nperseg=4, hop=2)
+        _, _, zr = ss.stft(x, window=w, nperseg=4, noverlap=2)
+        # same arithmetic as SciPy; O(10) values, 1e-12 allows FFT rounding
+        assert_allclose(z, zr, rtol=0, atol=1e-12)
+        # scipy.signal.istft multiplies by the signed sum(w) and returns -x here; the
+        # inverse of our (and SciPy's) stft multiplies by |sum(w)| and returns x
+        y = istft(z, window=w, nperseg=4, hop=2, n=8)
+        # exact up to rounding (integer samples, two frames per sample)
+        assert_allclose(y, x, rtol=0, atol=1e-12)
+
+    def test_small_window_scale_reconstructs(self) -> None:
+        # the istft NOLA threshold is relative to the window scale
+        x = np.random.default_rng(8).standard_normal(50)
+        w = 1e-6 * np.ones(8)
+        _, _, z = stft(x, window=w, nperseg=8, hop=4)
+        y = istft(z, window=w, nperseg=8, hop=4, n=50)
+        # AC: reconstruction error below 1e-10
+        self.assertLess(float(np.max(np.abs(y - x))), 1e-10)
+
+    def test_default_tolerances(self) -> None:
+        # the documented default tol = 1e-10 for both checks
+        w = np.ones(8)
+        w[0] = 1.0 + 5e-11
+        self.assertTrue(check_cola(w, 8, 4))
+        w[0] = 1.0 + 2e-10
+        self.assertFalse(check_cola(w, 8, 4))
+        self.assertTrue(check_nola(np.full(4, np.sqrt(2e-10)), 4, 4))
+        self.assertFalse(check_nola(np.full(4, np.sqrt(5e-11)), 4, 4))
+
+    def test_bool_arguments(self) -> None:
+        _, _, z = stft(np.arange(20.0), nperseg=8, hop=4)
+        y_np = istft(z, nperseg=8, hop=4, onesided=np.True_)  # type: ignore[arg-type]
+        assert_array_equal(y_np, istft(z, nperseg=8, hop=4))
+        _, _, zb = stft(np.arange(20.0), window=np.ones(8, dtype=bool), nperseg=8, hop=4)
+        _, _, zf = stft(np.arange(20.0), window=np.ones(8), nperseg=8, hop=4)
+        assert_array_equal(zb, zf)
+
+    def test_short_signals_against_direct_dft(self) -> None:
+        # n < nperseg (SciPy would shrink nperseg) and every frame, edges included,
+        # against the definition: x zero outside, frame r starts at r * hop - nperseg // 2
+        rng = np.random.default_rng(9)
+        for n, nperseg, hop, cplx in [
+            (3, 8, 2, False),
+            (5, 9, 4, True),
+            (1, 7, 7, False),
+            (10, 15, 6, True),
+        ]:
+            with self.subTest(n=n, nperseg=nperseg, hop=hop, cplx=cplx):
+                x = _signal(rng, (n,), cplx)
+                w = get_window("hamming", nperseg)
+                _, _, z = stft(x, window="hamming", nperseg=nperseg, hop=hop)
+                half = nperseg // 2
+                for r in range(z.shape[-1]):
+                    seg = np.zeros(nperseg, dtype=complex)
+                    for m in range(nperseg):
+                        i = r * hop - half + m
+                        if 0 <= i < n:
+                            seg[m] = x[i]
+                    full = np.fft.fft(seg * w) / np.sum(w)
+                    ref = full if cplx else full[: nperseg // 2 + 1]
+                    # direct DFT of the same samples; 1e-13 allows FFT rounding
+                    assert_allclose(z[:, r], ref, rtol=0, atol=1e-13)
+                y = istft(z, window="hamming", nperseg=nperseg, hop=hop, onesided=not cplx, n=n)
+                # AC: reconstruction error below 1e-10
+                self.assertLess(float(np.max(np.abs(y - x))), 1e-10)
+
+    def test_inputs_not_modified_by_inverse_and_checks(self) -> None:
+        _, _, z = stft(np.random.default_rng(10).standard_normal((2, 60)), nperseg=16, hop=4)
+        z0 = z.copy()
+        w = get_window("hann", 16)
+        w0 = w.copy()
+        istft(z, window=w, nperseg=16, hop=4)
+        check_cola(w, 16, 4)
+        check_nola(w, 16, 4)
+        assert_array_equal(z, z0)
+        assert_array_equal(w, w0)
+
+    def test_dc_and_nyquist_amplitude(self) -> None:
+        # at DC and Nyquist both exponentials of the cosine fall into one bin: |Z| = A
+        a = 2.5
+        n = np.arange(400)
+        for x, b in ((a * np.ones(400), 0), (a * np.cos(np.pi * n), -1)):
+            _, _, z = stft(x, window="hann", nperseg=64, hop=32)
+            # exact up to rounding in the frames inside the signal
+            assert_allclose(np.abs(z[b, 2:-2]), a, rtol=1e-12)
+
+    def test_tiny_fs_and_parametrised_window_name(self) -> None:
+        with self.assertRaises(ValueError):
+            stft(np.ones(16), 5e-324, nperseg=8)
+        with self.assertRaises(TypeError):
+            stft(np.ones(16), window="kaiser", nperseg=8)
+
+    def test_output_contiguous(self) -> None:
+        _, _, z = stft(np.ones((2, 40)), nperseg=8, hop=4)
+        self.assertTrue(istft(z, nperseg=8, hop=4).flags["C_CONTIGUOUS"])
+        self.assertTrue(istft(z, nperseg=8, hop=4, n=30).flags["C_CONTIGUOUS"])
+
+
 if __name__ == "__main__":
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
