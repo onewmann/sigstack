@@ -97,7 +97,11 @@ class SignalInfo:
         fs: object = self.fs  # checked as object: NumPy scalars are numbers.Real, bool is not
         if isinstance(fs, (bool, np.bool_)) or not isinstance(fs, numbers.Real):
             raise ValueError(f"fs must be a real number, got {type(fs).__name__}")
-        if not math.isfinite(fs) or fs <= 0:
+        try:
+            finite = math.isfinite(fs)
+        except OverflowError:  # a Python int beyond the float range
+            finite = False
+        if not finite or fs <= 0:
             raise ValueError(f"fs must be finite and positive, got {fs}")
         n: object = self.n_samples
         if isinstance(n, (bool, np.bool_)) or not isinstance(n, numbers.Integral) or n < 0:

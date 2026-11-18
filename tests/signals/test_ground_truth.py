@@ -38,6 +38,8 @@ class TestSignalInfoContract(unittest.TestCase):
             ("n negative", 8.0, -5),
             ("n float", 8.0, 8.0),
             ("n bool", 8.0, True),
+            ("fs huge int", 10**400, 8),
+            ("fs 0-d array (unhashable record)", np.array(8.0), 8),
         ]
         for name, fs, n in bad:
             with self.subTest(case=name), self.assertRaises(ValueError):

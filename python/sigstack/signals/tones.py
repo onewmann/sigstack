@@ -86,7 +86,7 @@ def multitone(
         If ``n`` is not an integer or ``fs`` is not a real number.
     ValueError
         If ``n <= 0``, ``fs`` is not positive, ``freqs`` is empty, frequencies are
-        out of range, or ``amplitudes``/``phases`` have wrong length.
+        out of range or not distinct, or ``amplitudes``/``phases`` have wrong length.
 
     Examples
     --------
@@ -119,7 +119,8 @@ def multitone(
         if not (np.all(freqs_arr > 0.0) and np.all(freqs_arr < nyquist)):
             raise ValueError(f"all frequencies must satisfy 0 < f < {nyquist} for real signals")
     if len(np.unique(freqs_arr)) != len(freqs_arr):
-        # the closed-form power sum(A^2)/2 (or sum(A^2)) holds only for distinct tones
+        # the theoretical (long-run) power sum(A^2)/2 (or sum(A^2)) assumes distinct frequencies;
+        # over n samples, tones closer than about fs / n still deviate from it (by definition)
         raise ValueError("frequencies must be distinct")
 
     # Validate amplitudes
