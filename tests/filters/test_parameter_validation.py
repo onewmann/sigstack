@@ -49,6 +49,36 @@ class TestZpkTransformParameters(unittest.TestCase):
             self.assertEqual(got[2], want[2])
 
 
+class TestScalarForms(unittest.TestCase):
+    def test_zero_d_arrays_accepted(self) -> None:
+        # a 0-d numeric array is a scalar, as on main before the checks (Wn already allowed it)
+        z, p, k = buttap(3)
+        a2: Any = np.array(2.0)
+        assert_array_equal(lp2lp_zpk(z, p, k, a2)[1], lp2lp_zpk(z, p, k, 2.0)[1])
+        assert_array_equal(bilinear_zpk(z, p, k, a2)[1], bilinear_zpk(z, p, k, 2.0)[1])
+        fs: Any = np.array(100.0)
+        rp: Any = np.array(1)
+        assert_array_equal(butter(4, 10.0, "low", fs), butter(4, 10.0, "low", 100.0))
+        assert_array_equal(cheby1(4, rp, 0.2), cheby1(4, 1.0, 0.2))
+
+    def test_huge_int_is_value_error(self) -> None:
+        # an int beyond the float range: ValueError like every other bad magnitude
+        z, p, k = buttap(3)
+        huge: Any = 10**400
+        calls = [
+            lambda: lp2lp_zpk(z, p, k, huge),
+            lambda: bilinear_zpk(z, p, k, huge),
+            lambda: butter(4, 10.0, "low", huge),
+            lambda: cheby1(4, huge, 0.2),
+        ]
+        for i, call in enumerate(calls):
+            with self.subTest(case=i), self.assertRaises(ValueError):
+                call()
+        bool_array: Any = np.array(True)
+        with self.assertRaises(ValueError):
+            lp2lp_zpk(z, p, k, bool_array)
+
+
 class TestDesignParameters(unittest.TestCase):
     def test_bad_types_are_value_errors(self) -> None:
         # Wn, rp, rs and fs: numbers.Real without bool / numpy.bool_; strings, bools and complex

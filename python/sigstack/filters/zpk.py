@@ -70,7 +70,8 @@ def _check_positive(name: str, value: object) -> float:
     name : str
         Parameter name for the error message.
     value : object
-        Value to check: a real number (Python or NumPy), finite and > 0.
+        Value to check: a real number (Python or NumPy scalar, or a 0-d numeric array),
+        finite and > 0.
 
     Returns
     -------
@@ -83,9 +84,16 @@ def _check_positive(name: str, value: object) -> float:
         If the value is a bool, a string, complex or another non-real object, or if it is
         not finite or not positive.
     """
+    if isinstance(value, np.ndarray) and value.ndim == 0 and value.dtype.kind in "iuf":
+        value = value.item()  # a 0-d numeric array is a scalar
     if isinstance(value, (bool, np.bool_)) or not isinstance(value, numbers.Real):
         raise ValueError(f"{name} must be a real number, got {type(value).__name__}")
-    result = float(value)
+    try:
+        result = float(value)
+    except OverflowError:  # a Python int beyond the float range
+        raise ValueError(
+            f"{name} must be finite and > 0, got an int too large for a float"
+        ) from None
     if not math.isfinite(result) or result <= 0.0:
         raise ValueError(f"{name} must be finite and > 0, got {result}")
     return result

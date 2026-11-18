@@ -91,14 +91,19 @@ def _validate(
         raise ValueError("btype must be 'low', 'high', 'band' or 'stop'")
 
     for name, given in (("rp", rp), ("rs", rs), ("fs", fs)):
-        obj: object = (
-            given  # checked as object: NumPy scalars are numbers.Real, str and bool are not
-        )
+        # checked as object: NumPy scalars are numbers.Real, str and bool are not
+        obj: object = given
         if obj is None:
             continue
+        if isinstance(obj, np.ndarray) and obj.ndim == 0 and obj.dtype.kind in "iuf":
+            obj = obj.item()  # a 0-d numeric array is a scalar
         if isinstance(obj, (bool, np.bool_)) or not isinstance(obj, numbers.Real):
             raise ValueError(f"{name} must be a real number, got {type(obj).__name__}")
-        if not math.isfinite(obj):
+        try:
+            finite = math.isfinite(obj)
+        except OverflowError:  # a Python int beyond the float range
+            finite = False
+        if not finite:
             raise ValueError(f"{name} must be finite")
     if fs is not None and fs <= 0:
         raise ValueError("fs must be > 0")
