@@ -9,6 +9,9 @@ References
 .. [OS2010] A. V. Oppenheim and R. W. Schafer, *Discrete-Time Signal Processing*, 3rd ed.,
    Pearson, 2010: sec. 2.1 (unit sample and sinusoidal sequences, `multitone`, `impulse`);
    sec. 10.3, Example 10.9 (linear chirp).
+.. [Farina2000] A. Farina, "Simultaneous measurement of impulse response and distortion with a
+   swept-sine technique", 108th AES Convention, Paris, February 2000, paper 5093 (exponential
+   sine sweep: the logarithmic `chirp`).
 """
 
 from __future__ import annotations

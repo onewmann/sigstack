@@ -1,4 +1,12 @@
-"""AM and FM signal generators."""
+"""AM and FM signal generators.
+
+References
+----------
+.. [Mitra2011] S. K. Mitra, *Digital Signal Processing: A Computer-Based Approach*, 4th ed.,
+   McGraw-Hill, 2011: sec. 1.2.4, eqs. (1.10)-(1.11) (amplitude modulation, double sideband
+   with and without carrier, `am`); sec. 1.4.3, eqs. (1.21)-(1.22) (sinusoidal frequency
+   modulation with components at f0 +- n f_m, `fm`).
+"""
 
 from __future__ import annotations
 
