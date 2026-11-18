@@ -62,6 +62,43 @@ def _check_finite_roots(roots: NDArray[np.complex128], name: str) -> None:
         raise ValueError(f"{name} must contain only finite values")
 
 
+def _check_positive(name: str, value: object) -> float:
+    """Validate a frequency parameter (``wo``, ``bw`` or ``fs``) and return it as a ``float``.
+
+    Parameters
+    ----------
+    name : str
+        Parameter name for the error message.
+    value : object
+        Value to check: a real number (Python or NumPy scalar, or a 0-d numeric array),
+        finite and > 0.
+
+    Returns
+    -------
+    float
+        The value.
+
+    Raises
+    ------
+    ValueError
+        If the value is a bool, a string, complex or another non-real object, or if it is
+        not finite or not positive.
+    """
+    if isinstance(value, np.ndarray) and value.ndim == 0 and value.dtype.kind in "iuf":
+        value = value.item()  # a 0-d numeric array is a scalar
+    if isinstance(value, (bool, np.bool_)) or not isinstance(value, numbers.Real):
+        raise ValueError(f"{name} must be a real number, got {type(value).__name__}")
+    try:
+        result = float(value)
+    except OverflowError:  # a Python int beyond the float range
+        raise ValueError(
+            f"{name} must be finite and > 0, got an int too large for a float"
+        ) from None
+    if not math.isfinite(result) or result <= 0.0:
+        raise ValueError(f"{name} must be finite and > 0, got {result}")
+    return result
+
+
 def _check_finite_gain(k: object) -> float:
     """Validate the gain and return it as a Python ``float``.
 
@@ -140,13 +177,15 @@ def bilinear_zpk(
     ------
     ValueError
         If ``z`` or ``p`` is not 1-D, if there are more zeros than poles, or if any
-        root or the gain is not finite.
+        root or the gain is not finite, or if ``fs`` is not a finite real number > 0
+        (bool, str and complex values included).
 
     References
     ----------
     A. V. Oppenheim and R. W. Schafer, *Discrete-Time Signal Processing*, 3rd ed.,
     Pearson, 2010, Sec. 7.2.2, Eq. (7.18).
     """
+    fs = _check_positive("fs", fs)
     z = _as_complex_1d(z)
     p = _as_complex_1d(p)
 
@@ -205,13 +244,15 @@ def lp2lp_zpk(
     ------
     ValueError
         If ``z`` or ``p`` is not 1-D, if there are more zeros than poles, or if any
-        root or the gain is not finite.
+        root or the gain is not finite, or if ``wo`` is not a finite real number > 0
+        (bool, str and complex values included).
 
     References
     ----------
     S. K. Mitra, *Digital Signal Processing: A Computer-Based Approach*, 4th ed.,
     McGraw-Hill, 2011, App. A.2, Eq. (A.11).
     """
+    wo = _check_positive("wo", wo)
     z = _as_complex_1d(z)
     p = _as_complex_1d(p)
 
@@ -275,13 +316,15 @@ def lp2hp_zpk(
     ------
     ValueError
         If ``z`` or ``p`` is not 1-D, if there are more zeros than poles, or if any
-        root or the gain is not finite.
+        root or the gain is not finite, or if ``wo`` is not a finite real number > 0
+        (bool, str and complex values included).
 
     References
     ----------
     S. K. Mitra, *Digital Signal Processing: A Computer-Based Approach*, 4th ed.,
     McGraw-Hill, 2011, App. B.1, Eq. (B.1).
     """
+    wo = _check_positive("wo", wo)
     z = _as_complex_1d(z)
     p = _as_complex_1d(p)
 
@@ -345,13 +388,16 @@ def lp2bp_zpk(
     ------
     ValueError
         If ``z`` or ``p`` is not 1-D, if there are more zeros than poles, or if any
-        root or the gain is not finite.
+        root or the gain is not finite, or if ``wo`` or ``bw`` is not a finite real number > 0
+        (bool, str and complex values included).
 
     References
     ----------
     S. K. Mitra, *Digital Signal Processing: A Computer-Based Approach*, 4th ed.,
     McGraw-Hill, 2011, App. B.2, Eq. (B.3).
     """
+    wo = _check_positive("wo", wo)
+    bw = _check_positive("bw", bw)
     z = _as_complex_1d(z)
     p = _as_complex_1d(p)
 
@@ -423,13 +469,16 @@ def lp2bs_zpk(
     ------
     ValueError
         If ``z`` or ``p`` is not 1-D, if there are more zeros than poles, or if any
-        root or the gain is not finite.
+        root or the gain is not finite, or if ``wo`` or ``bw`` is not a finite real number > 0
+        (bool, str and complex values included).
 
     References
     ----------
     S. K. Mitra, *Digital Signal Processing: A Computer-Based Approach*, 4th ed.,
     McGraw-Hill, 2011, App. B.3, Eq. (B.6).
     """
+    wo = _check_positive("wo", wo)
+    bw = _check_positive("bw", bw)
     z = _as_complex_1d(z)
     p = _as_complex_1d(p)
 
