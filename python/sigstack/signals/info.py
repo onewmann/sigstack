@@ -10,6 +10,10 @@ The record is immutable to prevent accidental modification after generation.
 from __future__ import annotations
 
 import dataclasses
+import math
+import numbers
+
+import numpy as np
 
 
 @dataclasses.dataclass(frozen=True)
@@ -89,5 +93,17 @@ class SignalInfo:
     params: dict[str, float] = dataclasses.field(default_factory=dict, hash=False)
 
     def __post_init__(self) -> None:
-        """Keep an own copy of params, so the caller's dict cannot change the record."""
+        """Check ``fs`` and ``n_samples`` and keep an own copy of ``params``."""
+        fs: object = self.fs  # checked as object: NumPy scalars are numbers.Real, bool is not
+        if isinstance(fs, (bool, np.bool_)) or not isinstance(fs, numbers.Real):
+            raise ValueError(f"fs must be a real number, got {type(fs).__name__}")
+        try:
+            finite = math.isfinite(fs)
+        except OverflowError:  # a Python int beyond the float range
+            finite = False
+        if not finite or fs <= 0:
+            raise ValueError(f"fs must be finite and positive, got {fs}")
+        n: object = self.n_samples
+        if isinstance(n, (bool, np.bool_)) or not isinstance(n, numbers.Integral) or n < 0:
+            raise ValueError(f"n_samples must be a non-negative integer, got {n!r}")
         object.__setattr__(self, "params", dict(self.params))
