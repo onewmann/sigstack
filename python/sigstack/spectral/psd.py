@@ -8,27 +8,31 @@ Definition
 ----------
 With window :math:`w` of length :math:`N` (``nperseg``), hop :math:`R` (``hop``) and FFT
 length :math:`N_\mathrm{fft} \ge N`, the frames are the contiguous segments
-:math:`x[kR : kR + N]` for :math:`k = 0, \ldots, K - 1` with
+:math:`x_r = x[rR : rR + N]` for :math:`r = 0, \ldots, K - 1` with
 :math:`K = \lfloor (n - N) / R \rfloor + 1`; trailing samples that do not fill a frame
-are ignored. Each frame is detrended, multiplied by the window and transformed with an FFT of length
-``nfft``. The estimate is the mean of the modified periodograms over the frames
-([OS2010]_ Sec. 10.5.3, Eqs. (10.82)-(10.84); [W1967]_):
+are ignored. Each frame is detrended, multiplied by the window and transformed with an
+FFT of length ``nfft``. The estimate is the mean of the modified periodograms over the
+frames ([OS2010]_ Sec. 10.5.3, Eqs. (10.82)-(10.84); [W1967]_):
 
 .. math::
 
-    P[k] = \frac{1}{K} \sum_{r=0}^{K-1} |X_r[k]|^2 \, s,
+    P[k] = \frac{s}{K} \sum_{r=0}^{K-1} |X_r[k]|^2,
 
-where :math:`s` is the scaling factor. With ``scaling="density"`` the factor is
-:math:`s = 1 / (f_s \sum_m w[m]^2)`; by Parseval's relation
-:math:`\sum_k P[k] \, \Delta f` then equals the mean over the frames of
-:math:`\sum_m |w[m] x_r[m]|^2 / \sum_m w[m]^2`, the window-weighted mean power, which
-estimates the mean power of the signal (:math:`\Delta f = f_s / N_\mathrm{fft}`); with
-``scaling="spectrum"`` it is
-:math:`s = 1 / (\sum_m w[m])^2`, so that a cosine of amplitude :math:`A` at a bin centre
-appears with :math:`P = A^2/2` (:math:`A^2` at DC and Nyquist). For real input the
-one-sided spectrum is returned: every bin except DC and, for even ``nfft``, Nyquist is
-doubled, so that it also carries the power of the matching negative frequency. For
-complex input the two-sided spectrum is returned in FFT order.
+where :math:`s` is the scaling factor:
+
+- ``scaling="density"``: :math:`s = 1 / (f_s \sum_m w[m]^2)`. By Parseval's relation,
+  :math:`\sum_k P[k] \, \Delta f` with :math:`\Delta f = f_s / N_\mathrm{fft}` equals the
+  mean over the frames of :math:`\sum_m |w[m] x_r[m]|^2 / \sum_m w[m]^2`, the
+  window-weighted mean power, which estimates the mean power of the signal.
+- ``scaling="spectrum"``: :math:`s = 1 / (\sum_m w[m])^2`. For real input a cosine of
+  amplitude :math:`A` at a bin centre appears with :math:`P = A^2/2` (:math:`A^2` at DC
+  and Nyquist). For complex input a complex exponential :math:`A e^{j \omega n}` at a bin
+  centre appears with :math:`A^2`, and a cosine with :math:`A^2/4` at each of
+  :math:`\pm f`.
+
+For real input the one-sided spectrum is returned: every bin except DC and, for even
+``nfft``, Nyquist is doubled, so that it also carries the power of the matching negative
+frequency. For complex input the two-sided spectrum is returned in FFT order.
 
 References
 ----------
@@ -90,7 +94,9 @@ def welch(
     nperseg : int, default 256
         Frame length :math:`N \ge 1`, at most the number of samples.
     hop : int, optional
-        Frame step :math:`1 \le R \le N`; default ``max(1, nperseg // 2)``.
+        Frame step :math:`1 \le R \le N`; default ``max(1, nperseg // 2)``, as for
+        :func:`sigstack.spectral.stft`. For odd ``nperseg`` this is one sample less than
+        the default of :func:`scipy.signal.welch` (``noverlap = nperseg // 2``).
     nfft : int, optional
         FFT length :math:`N_\mathrm{fft} \ge N` (zero padding of each frame); default
         ``nperseg``.
@@ -99,8 +105,9 @@ def welch(
         frame before windowing; ``None`` (or ``False``) leaves the frames unchanged.
     scaling : {"density", "spectrum"}, default "density"
         ``"density"``: power per hertz (units squared per hertz), its integral
-        estimates the mean power; ``"spectrum"`` scales so that a cosine of amplitude
-        :math:`A` at a bin centre appears with :math:`A^2/2`.
+        estimates the mean power; ``"spectrum"``: power per bin, a real cosine of
+        amplitude :math:`A` at a bin centre appears with :math:`A^2/2` (complex input:
+        see the module docstring).
 
     Returns
     -------
@@ -140,13 +147,10 @@ def welch(
     step = _hop(nps, hop)
     nf = _nfft(nps, nfft)
     w = _window(window, nps)
-    if detrend is not None and detrend is not False:
-        if not isinstance(detrend, str):
-            raise ValueError(f"detrend must be 'constant', 'linear' or None, got {detrend!r}")
-        if detrend not in ("constant", "linear"):
-            raise ValueError(f"detrend must be 'constant', 'linear' or None, got {detrend!r}")
-    else:
+    if detrend is None or (isinstance(detrend, bool | np.bool_) and not detrend):
         detrend = None
+    elif not isinstance(detrend, str) or detrend not in ("constant", "linear"):
+        raise ValueError(f"detrend must be 'constant', 'linear', None or False, got {detrend!r}")
     if scaling not in ("density", "spectrum"):
         raise ValueError(f"scaling must be 'density' or 'spectrum', got {scaling!r}")
     w2 = float(np.sum(w * w))
@@ -177,8 +181,9 @@ def welch(
     else:
         spec = np.fft.rfft(frames, n=nf, axis=-1)
         f = np.fft.rfftfreq(nf, 1.0 / rate)
-    scale = 1.0 / (rate * w2) if scaling == "density" else 1.0 / (wsum * wsum)
-    psd = np.mean(np.abs(spec) ** 2, axis=-2) * scale
+    power = np.mean(np.abs(spec) ** 2, axis=-2)
+    # divide step by step: the products rate * w2 or wsum**2 can overflow for extreme fs
+    psd = power / w2 / rate if scaling == "density" else power / wsum / wsum
     if not cplx:
         last = nf // 2 if nf % 2 == 0 else nf // 2 + 1
         psd[..., 1:last] *= 2.0
@@ -191,9 +196,14 @@ def band_power(f: ArrayLike, psd: ArrayLike, edges: ArrayLike) -> NDArray[np.flo
     The bands are the intervals between consecutive edges; all but the last are half-open
     ``[lo, hi)`` and the last is closed ``[lo, hi]``. Each bin is assigned to the band
     that contains its centre frequency, and the band power is the sum of the density over
-    those bins times the frequency spacing :math:`\Delta f`. The input must be a density
-    (``welch`` with ``scaling="density"``); for a partition of the frequency range the
-    band powers sum to the total power, :math:`\sum_k P[k] \, \Delta f` (Parseval).
+    those bins times the frequency spacing :math:`\Delta f`. A centre within
+    :math:`10^{-9} \Delta f` of an edge counts as lying on that edge, so that rounding in
+    ``rfftfreq`` (for example ``4.999999999999999`` for 5 Hz) does not move a bin to the
+    lower band.
+
+    The input must be a density (:func:`welch` with ``scaling="density"``). Bands that
+    together cover every bin sum to :math:`\sum_k P[k] \, \Delta f`; for a density from
+    :func:`welch` that is the window-weighted mean power (see the module docstring).
 
     Parameters
     ----------
@@ -215,10 +225,10 @@ def band_power(f: ArrayLike, psd: ArrayLike, edges: ArrayLike) -> NDArray[np.flo
     Raises
     ------
     ValueError
-        If ``f`` is not a finite 1-D real array that is uniformly spaced after
-        sorting; if ``psd`` has the
-        wrong shape or contains negative, non-finite or complex values; or if ``edges``
-        is not a finite, strictly increasing 1-D real array of length at least two.
+        If ``f`` is not a finite 1-D real array that is uniformly spaced after sorting;
+        if ``psd`` has the wrong shape or contains negative, non-finite or complex
+        values; or if ``edges`` is not a finite, strictly increasing 1-D real array of
+        length at least two.
     """
     fa = np.asarray(f)
     if fa.dtype.kind not in "iuf":
@@ -265,9 +275,10 @@ def band_power(f: ArrayLike, psd: ArrayLike, edges: ArrayLike) -> NDArray[np.flo
 
     nb = e64.size - 1
     out = np.zeros((*p64.shape[:-1], nb), dtype=np.float64)
+    tol = 1e-9 * dm  # a centre this close to an edge lies on it (rounding in rfftfreq)
     for i in range(nb):
-        lo, hi = float(e64[i]), float(e64[i + 1])
-        upper = f64 <= hi if i == nb - 1 else f64 < hi
+        lo, hi = float(e64[i]) - tol, float(e64[i + 1])
+        upper = f64 <= hi + tol if i == nb - 1 else f64 < hi - tol
         mask = (f64 >= lo) & upper
         out[..., i] = p64[..., mask].sum(axis=-1) * dm
     return out

@@ -420,5 +420,83 @@ class TestValidation(unittest.TestCase):
                 band_power(f, p, bad)
 
 
+class TestReviewFixes(unittest.TestCase):
+    def test_bins_on_an_edge_go_to_the_upper_band(self) -> None:
+        # rfftfreq gives 4.999999999999999 for the 5 Hz bin here; it must start [5, 10)
+        x = np.random.default_rng(20).standard_normal(5000)
+        f, p = welch(x, 125.0, nperseg=700, hop=350)
+        spike = np.zeros_like(p)
+        spike[28] = 1.0
+        df = 125.0 / 700
+        assert_allclose(band_power(f, spike, [0.0, 5.0, 10.0, 62.5]), [0.0, df, 0.0], rtol=1e-15)
+        for fs, nfft in ((125.0, 700), (1000.0, 999), (44100.0, 1000), (3.0, 7)):
+            ff = np.fft.rfftfreq(nfft, 1 / fs)
+            for k in range(1, nfft // 2):
+                with self.subTest(fs=fs, nfft=nfft, k=k):
+                    one = np.zeros(ff.shape[0])
+                    one[k] = 1.0
+                    edge = k * fs / nfft  # the bin's nominal frequency as an edge
+                    bp = band_power(ff, one, [0.0, edge, fs / 2])
+                    assert_allclose(bp, [0.0, fs / nfft], rtol=1e-12)  # spacing round-off
+
+    def test_linspace_grid(self) -> None:
+        f = np.linspace(0.0, 50.0, 101)
+        bp = band_power(f, np.ones(101), [0.0, 10.0, 20.0, 50.0])
+        assert_allclose(bp, [10.0, 10.0, 30.5], rtol=1e-12)  # 20, 20 and 61 bins of 0.5
+
+    def test_default_hop_for_odd_nperseg(self) -> None:
+        # default hop is nperseg // 2 = 32 here, i.e. SciPy's noverlap = 33
+        x = np.random.default_rng(21).standard_normal(1000)
+        _, p = welch(x, nperseg=65)
+        _, p_ref = ss.welch(x, nperseg=65, noverlap=33)
+        assert_allclose(p, p_ref, rtol=1e-10, atol=1e-12 * float(np.max(p_ref)))  # round-off
+
+    def test_non_contiguous_and_fortran_input(self) -> None:
+        base = np.random.default_rng(22).standard_normal((400, 3))
+        _, p_ref = welch(np.ascontiguousarray(base.T), nperseg=40, detrend="linear")
+        for x in (base.T, np.asfortranarray(base.T), base.T[:, ::-1][:, ::-1]):
+            _, p = welch(x, nperseg=40, detrend="linear")
+            assert_allclose(p, p_ref, rtol=1e-12, atol=0)  # same values, other memory layout
+
+    def test_window_with_negative_values(self) -> None:
+        x = np.random.default_rng(23).standard_normal(600)
+        w = get_window("hann", 48) - 0.2
+        for scaling in ("density", "spectrum"):
+            with self.subTest(scaling=scaling):
+                _, p = welch(x, 10.0, window=w, nperseg=48, scaling=scaling)
+                _, p_ref = ss.welch(x, 10.0, window=w, nperseg=48, scaling=scaling)
+                # FFT round-off relative to the largest bin
+                assert_allclose(p, p_ref, rtol=1e-10, atol=1e-12 * float(np.max(p_ref)))
+
+    def test_nperseg_one_linear_detrend(self) -> None:
+        x = np.random.default_rng(24).standard_normal(50)
+        _, p = welch(x, nperseg=1, detrend="linear")
+        assert_array_equal(p, np.zeros(1))  # a one-sample frame minus its mean is zero
+
+    def test_extreme_fs_does_not_overflow_the_scale(self) -> None:
+        x = np.random.default_rng(25).standard_normal(500)
+        _, p1 = welch(x, 1.0, nperseg=64)
+        _, p_big = welch(x, 1e307, nperseg=64)  # 1e307 * sum(w**2) = 2.4e308 overflows
+        assert_allclose(p_big, p1 / 1e307, rtol=1e-12)  # division round-off only
+        self.assertTrue(np.all(p_big > 0))
+
+    def test_detrend_numpy_false(self) -> None:
+        x = np.random.default_rng(26).standard_normal(300) + 2.0
+        _, p_np = welch(x, nperseg=30, detrend=np.False_)  # type: ignore[arg-type]
+        _, p_none = welch(x, nperseg=30, detrend=None)
+        assert_array_equal(p_np, p_none)
+        with self.assertRaises(ValueError):
+            welch(x, nperseg=30, detrend=np.True_)  # type: ignore[arg-type]
+
+    def test_spectrum_scaling_complex_exponential(self) -> None:
+        # bin 20 of 200 at fs 1000: 100 Hz; |A|^2 at its bin, nothing at -100 Hz
+        n = np.arange(4000)
+        x = 2.0 * np.exp(2j * np.pi * 100.0 * n / 1000.0)
+        f, p = welch(x, 1000.0, nperseg=200, detrend=None, scaling="spectrum")
+        self.assertEqual(f[20], 100.0)
+        assert_allclose(p[20], 4.0, rtol=1e-10)  # A^2, round-off only
+        self.assertLess(float(p[180]), 1e-20)  # periodic Hann: no leakage to -100 Hz
+
+
 if __name__ == "__main__":
     unittest.main()
