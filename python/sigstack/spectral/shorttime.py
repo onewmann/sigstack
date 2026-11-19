@@ -177,7 +177,9 @@ def stft(
     nperseg : int, default 256
         Frame length :math:`N \ge 1`.
     hop : int, optional
-        Frame step :math:`1 \le R \le N`; default ``max(1, nperseg // 2)``.
+        Frame step :math:`1 \le R \le N`; default ``max(1, nperseg // 2)``. For odd
+        ``nperseg`` this is one sample less than the default of :func:`scipy.signal.stft`
+        (``noverlap = nperseg // 2``).
     nfft : int, optional
         FFT length :math:`N_\mathrm{fft} \ge N` (zero padding of each frame); default
         ``nperseg``.
